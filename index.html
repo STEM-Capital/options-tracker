@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Options Trade Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#1a1a1a;background:#f0ede6;min-height:100vh}
@@ -528,13 +529,135 @@ textarea{resize:vertical;min-height:58px}
 </div><!-- .app -->
 
 <script>
-var STORE = 'options_tracker_v1';
+var SUPABASE_URL = 'https://bjbgdlyswrertggqdxkc.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_oRxf6Mwoj2maWMIS0rwFxQ_j-rZ2f2W';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 var trades = [];
 var equityChart = null;
 var closingId = null;
 
-function load(){ try{ trades=JSON.parse(localStorage.getItem(STORE)||'[]'); }catch(e){ trades=[]; } }
-function save(){ localStorage.setItem(STORE,JSON.stringify(trades)); }
+function load(){
+  // Supabase load is async - handled in init
+}
+
+async function save(){
+  // save is now handled per-operation (saveTrade, confirmFill, etc)
+  // localStorage kept as fallback cache
+  localStorage.setItem('opt_trades_cache', JSON.stringify(trades));
+}
+
+async function loadFromSupabase(){
+  try {
+    var res = await sb.from('trades').select('*').order('created_at', {ascending: true});
+    if(res.error){ console.error('Load error:', res.error); loadFromCache(); return; }
+    trades = (res.data||[]).map(dbToTrade);
+    localStorage.setItem('opt_trades_cache', JSON.stringify(trades));
+  } catch(e){ console.error('Supabase error:', e); loadFromCache(); }
+}
+
+function loadFromCache(){
+  try{ trades=JSON.parse(localStorage.getItem('opt_trades_cache')||'[]'); }catch(e){ trades=[]; }
+}
+
+function tradeToDb(t){
+  return {
+    id: t.id,
+    ticker: t.ticker||'',
+    open_date: t.openDate||'',
+    setup: t.setup||'',
+    dir: t.dir||'',
+    roll: t.roll||'',
+    hedge: t.hedge||'',
+    short_strike: t.short||'',
+    long_strike: t.long||'',
+    dte: t.dte||'',
+    delta: t.delta||'',
+    credit: t.credit||'',
+    debit: t.debit||'',
+    bc_credit: t.bcCredit||'',
+    bp_credit: t.bpCredit||'',
+    risk: t.risk||'',
+    received: t.received||'',
+    ordered: String(t.ordered||''),
+    filled: String(t.filled||''),
+    open_comm: t.openComm||'',
+    target: t.target||'',
+    e1price: t.e1price||'',
+    e1qty: String(t.e1qty||''),
+    e1comm: t.e1comm||'',
+    e2price: t.e2price||'',
+    e2qty: String(t.e2qty||''),
+    e2comm: t.e2comm||'',
+    close_date: t.closeDate||'',
+    days_open: String(t.daysOpen||''),
+    exit_reason: t.exitReason||'',
+    pnl: t.pnl||'',
+    rpnl: t.rpnl||'',
+    wl: t.wl||'',
+    comments: t.comments||'',
+    is_dir: !!t.isDir,
+    pending: !!t.pending,
+    cancelled: !!t.cancelled
+  };
+}
+
+function dbToTrade(r){
+  return {
+    id: r.id,
+    ticker: r.ticker,
+    openDate: r.open_date,
+    setup: r.setup,
+    dir: r.dir,
+    roll: r.roll,
+    hedge: r.hedge,
+    short: r.short_strike,
+    long: r.long_strike,
+    dte: r.dte,
+    delta: r.delta,
+    credit: r.credit,
+    debit: r.debit,
+    bcCredit: r.bc_credit,
+    bpCredit: r.bp_credit,
+    risk: r.risk,
+    received: r.received,
+    ordered: r.ordered,
+    filled: r.filled,
+    openComm: r.open_comm,
+    target: r.target,
+    e1price: r.e1price,
+    e1qty: r.e1qty,
+    e1comm: r.e1comm,
+    e2price: r.e2price,
+    e2qty: r.e2qty,
+    e2comm: r.e2comm,
+    closeDate: r.close_date,
+    daysOpen: r.days_open,
+    exitReason: r.exit_reason,
+    pnl: r.pnl,
+    rpnl: r.rpnl,
+    wl: r.wl,
+    comments: r.comments,
+    isDir: r.is_dir,
+    pending: r.pending,
+    cancelled: r.cancelled
+  };
+}
+
+async function upsertTrade(t){
+  var row = tradeToDb(t);
+  var res = await sb.from('trades').upsert(row, {onConflict:'id'});
+  if(res.error) console.error('Upsert error:', res.error);
+  localStorage.setItem('opt_trades_cache', JSON.stringify(trades));
+}
+
+async function deleteTrade(id){
+  var res = await sb.from('trades').delete().eq('id', id);
+  if(res.error){ console.error('Delete error:', res.error); return; }
+  trades = trades.filter(function(t){ return t.id !== id; });
+  localStorage.setItem('opt_trades_cache', JSON.stringify(trades));
+  renderOpen(); renderClosed();
+}
 function eid(id){ return document.getElementById(id); }
 function on(id,evt,fn){ var e=eid(id); if(e) e.addEventListener(evt,fn); }
 function enforce2dp(id){
@@ -747,8 +870,10 @@ function saveTrade(){
     pending: true   // ← awaiting fill confirmation
   };
   trades.push(t); save();
-  var msg=eid('save-msg'); msg.style.display='inline';
-  setTimeout(function(){ msg.style.display='none'; },3000);
+  upsertTrade(t).then(function(){
+    var msg=eid('save-msg'); msg.style.display='inline';
+    setTimeout(function(){ msg.style.display='none'; },2500);
+  });
   clearForm();
   renderPending();
 }
@@ -782,8 +907,7 @@ function clearForm(){
 // ── Delete (with inline confirm — works locally too) ──────────────────────
 function doDelete(id){
   if(!confirm('Delete this trade? This cannot be undone.')) return;
-  trades=trades.filter(function(t){ return t.id!==id; });
-  save(); renderOpen(); renderClosed();
+  deleteTrade(id);
 }
 
 function makeDeleteBtn(id){
@@ -842,7 +966,8 @@ function confirmClose(){
   trades[idx].exitReason=gv('m-er');
   trades[idx].pnl=gv('m-pnl'); trades[idx].rpnl=gv('m-rpnl'); trades[idx].wl=gv('m-wl');
   trades[idx].comments=gv('m-comments');
-  save(); eid('close-modal').classList.remove('open');
+  upsertTrade(trades[idx]);
+  eid('close-modal').classList.remove('open');
   closingId=null; renderOpen(); renderClosed(); showTab('closed');
 }
 
@@ -1088,7 +1213,7 @@ function cancelOrder(id){
   trades[idx].pending=false;
   trades[idx].cancelled=true;
   trades[idx].exitReason='Cancelled';
-  save(); renderPending();
+  upsertTrade(trades[idx]); renderPending();
 }
 
 function openFillModal(id){
@@ -1136,26 +1261,41 @@ function calcFillReceivedIC(){
 
 function confirmFill(){
   if(fillingId===null) return;
-  var idx=trades.findIndex(function(x){ return x.id===fillingId; }); if(idx<0) return;
-  var credit=parseFloat(gv('fm-credit'))||0;
-  var filled=parseInt(gv('fm-filled'))||0;
-  var rcv=(credit*filled*100).toFixed(2);
-  var t=trades[idx];
-  var pct=(t.setup||'Typical')==='Typical'?0.30:0.50;
-  trades[idx].filled    = filled;
-  trades[idx].credit    = t.isDir?'':String(credit);
-  trades[idx].debit     = t.isDir?String(credit):'';
-  trades[idx].openComm  = gv('fm-comm');
-  trades[idx].received  = credit>0?(t.isDir?'-$'+rcv:'$'+rcv):'';
-  var manualTarget=gv('fm-target');
-  trades[idx].target    = manualTarget || (credit>0?'-'+(Math.floor(credit*pct/0.05)*0.05).toFixed(2):'');
-  // update risk
-  if(!t.isDir && !isNaN(parseFloat(t.short)) && !isNaN(parseFloat(t.long))){
-    var spread=Math.abs(parseFloat(t.short)-parseFloat(t.long));
-    trades[idx].risk = spread>0?'$'+((spread-credit)*100).toFixed(2):'';
+  var fidx=trades.findIndex(function(x){ return x.id===fillingId; }); if(fidx<0) return;
+  var t=trades[fidx];
+  var ic=t.dir==='Iron Condor';
+  if(ic){
+    var bcC=parseFloat(gv('fm-bc-credit'))||0;
+    var bpC=parseFloat(gv('fm-bp-credit'))||0;
+    var tot=parseFloat((bcC+bpC).toFixed(2));
+    var filled=parseInt(gv('fm-ic-filled'))||0;
+    var pct=(t.setup||'Typical')==='Typical'?0.30:0.50;
+    trades[fidx].filled   = filled;
+    trades[fidx].bcCredit = bcC.toFixed(2);
+    trades[fidx].bpCredit = bpC.toFixed(2);
+    trades[fidx].credit   = tot.toFixed(2);
+    trades[fidx].openComm = gv('fm-ic-comm');
+    trades[fidx].received = tot>0?'$'+(tot*filled*100).toFixed(2):'';
+    trades[fidx].target   = tot>0?'-$'+(Math.floor(tot*pct/0.05)*0.05).toFixed(2):'';
+    trades[fidx].risk     = tot>0?'$'+((10-tot)*100).toFixed(2):'';
+  } else {
+    var credit=parseFloat(gv('fm-credit'))||0;
+    var filled=parseInt(gv('fm-filled'))||0;
+    var pct=(t.setup||'Typical')==='Typical'?0.30:0.50;
+    trades[fidx].filled   = filled;
+    trades[fidx].credit   = t.isDir?'':credit.toFixed(2);
+    trades[fidx].debit    = t.isDir?credit.toFixed(2):'';
+    trades[fidx].openComm = gv('fm-comm');
+    trades[fidx].received = credit>0?(t.isDir?'-$'+(credit*filled*100).toFixed(2):'$'+(credit*filled*100).toFixed(2)):'';
+    var mt=gv('fm-target');
+    trades[fidx].target   = mt||(credit>0?'-$'+(Math.floor(credit*pct/0.05)*0.05).toFixed(2):'');
+    if(!t.isDir&&!isNaN(parseFloat(t.short))&&!isNaN(parseFloat(t.long))){
+      var spread=Math.abs(parseFloat(t.short)-parseFloat(t.long));
+      trades[fidx].risk = spread>0?'$'+((spread-credit)*100).toFixed(2):'';
+    }
   }
-  trades[idx].pending = false;  // ← now a real open trade
-  save();
+  trades[fidx].pending=false;
+  upsertTrade(trades[fidx]);
   eid('fill-modal').classList.remove('open');
   fillingId=null;
   renderPending(); renderOpen();
@@ -1199,7 +1339,7 @@ function confirmEdit(){
   trades[idx].ordered  = gv('em-ordered');
   trades[idx].target   = gv('em-target');
   trades[idx].comments = gv('em-comments');
-  save();
+  upsertTrade(trades[idx]);
   eid('edit-modal').classList.remove('open');
   renderPending();
 }
@@ -1364,16 +1504,19 @@ function importJSON(file){
           'Cancel = Replace (delete existing, load imported)');
         if(choice){
           var ids=new Set(trades.map(function(t){ return t.id; }));
-          var added=0;
-          imported.forEach(function(t){ if(!ids.has(t.id)){ trades.push(t); added++; } });
-          save(); showStatus('Merged: '+added+' trades added ('+trades.length+' total)');
+          var toAdd=imported.filter(function(t){ return !ids.has(t.id); });
+          toAdd.forEach(function(t){ trades.push(t); });
+          Promise.all(toAdd.map(upsertTrade)).then(function(){ showStatus('Merged: '+toAdd.length+' trades added ('+trades.length+' total)'); });
         } else {
-          trades=imported; save();
-          showStatus('Replaced: '+trades.length+' trades loaded');
+          // Replace: delete all then insert
+          sb.from('trades').delete().neq('id',0).then(function(){
+            trades=imported;
+            Promise.all(imported.map(upsertTrade)).then(function(){ showStatus('Replaced: '+trades.length+' trades loaded'); });
+          });
         }
       } else {
-        trades=imported; save();
-        showStatus('Loaded: '+trades.length+' trades');
+        trades=imported;
+        Promise.all(imported.map(upsertTrade)).then(function(){ showStatus('Loaded: '+trades.length+' trades'); });
       }
       renderOpen(); renderClosed();
     } catch(err){ showStatus('Error: '+err.message,'error'); }
@@ -1439,10 +1582,25 @@ on('import-file','change',function(){
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────
-load();
-// Clear any cancelled trades from previous sessions
-trades=trades.filter(function(t){ return !t.cancelled; });
-save();
+// Show loading indicator
+document.querySelector('.app').insertAdjacentHTML('afterbegin',
+  '<div id="sb-loading" style="background:#f0f8e8;border:1px solid #c8e4a0;border-radius:8px;padding:10px 16px;margin-bottom:12px;font-size:13px;color:#3B6D11;">⏳ Loading trades from database...</div>'
+);
+
+loadFromSupabase().then(function(){
+  var el=document.getElementById('sb-loading');
+  if(el) el.remove();
+  // render current tab if not entry
+  var activeTab=document.querySelector('.tab.active');
+  if(activeTab){
+    var t=activeTab.getAttribute('data-tab');
+    if(t==='open') renderOpen();
+    if(t==='closed') renderClosed();
+    if(t==='dashboard') renderDashboard();
+    if(t==='filled') renderPending();
+  }
+});
+
 var today=new Date().toISOString().split('T')[0]; sv('f-open-date',today);
 var dte=nextFriday(today);
 sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);

@@ -101,8 +101,46 @@ textarea{resize:vertical;min-height:58px}
     </div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in</button>
     <div class="login-error" id="login-error">Incorrect password. Please try again.</div>
+    <div style="margin-top:12px;text-align:center;font-size:12px">
+      <a href="mailto:stemcapital@outlook.com?subject=STEM Tracker - Password Reset&body=Please reset my password for the STEM Capital Options Tracker." style="color:#185FA5;text-decoration:none">Forgot password?</a>
+    </div>
   </div>
 </div>
+
+<script>
+// Login script — defined immediately so onclick works before main script loads
+var _ADMIN = '*VHmt*Zx=z2w';
+var _GUEST = '*b2DF*og:yLp';
+
+function doLogout(){
+  sessionStorage.removeItem('stem_role');
+  location.reload();
+}
+
+function doLogin(){
+  var u=document.getElementById('login-user').value.trim();
+  var p=document.getElementById('login-pass').value;
+  var err=document.getElementById('login-error');
+  // Accept password with or without leading asterisk
+  var adminOk = (u==='STEM' && (p===_ADMIN || p===_ADMIN.replace(/^\*/,'')));
+  var guestOk = (u==='Holly' && (p===_GUEST || p===_GUEST.replace(/^\*/,'')));
+  if(adminOk){
+    sessionStorage.setItem('stem_role','admin');
+    document.getElementById('login-screen').style.display='none';
+    if(typeof initApp==='function') initApp();
+    else window.addEventListener('appready',function(){ initApp(); });
+  } else if(guestOk){
+    sessionStorage.setItem('stem_role','guest');
+    document.getElementById('login-screen').style.display='none';
+    if(typeof initApp==='function'){ applyGuestMode(); initApp(); }
+    else window.addEventListener('appready',function(){ applyGuestMode(); initApp(); });
+  } else {
+    err.style.display='block';
+    document.getElementById('login-pass').value='';
+    document.getElementById('login-pass').focus();
+  }
+}
+</script>
 
 <div class="app">
 <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #d8d4cc">
@@ -121,6 +159,7 @@ textarea{resize:vertical;min-height:58px}
   <button class="btn btn-imp" id="btn-import-json">Import backup</button>
   <input type="file" id="import-file" accept=".json" style="display:none">
   <span class="backup-note" id="backup-status"></span>
+  <button class="btn" id="btn-logout" style="margin-left:auto;padding:5px 12px;font-size:12px;color:#A32D2D;border-color:#F0C0C0" onclick="doLogout()">Sign out</button>
 </div>
 
 <!-- Close trade modal -->
@@ -1623,82 +1662,33 @@ var dte=nextFriday(today);
 sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);
 onDirChange();
 
-// ── Login ─────────────────────────────────────────────────────────────────
-var ADMIN_PASS = '*VHmt*Zx=z2w';
-var GUEST_PASS = '*b2DF*og:yLp';
-var userRole = null; // 'admin' or 'guest'
-
-function doLogin(){
-  var userEl=document.getElementById('login-user');
-  var passEl=document.getElementById('login-pass');
-  var errEl=document.getElementById('login-error');
-  if(!userEl||!passEl) return;
-  var user = userEl.value.trim();
-  var pass = passEl.value;
-  if(user === 'STEM' && pass === '*VHmt*Zx=z2w'){
-    userRole = 'admin';
-    document.getElementById('login-screen').style.display = 'none';
-    sessionStorage.setItem('stem_role','admin');
-    initApp();
-  } else if(user === 'Holly' && pass === '*b2DF*og:yLp'){
-    userRole = 'guest';
-    document.getElementById('login-screen').style.display = 'none';
-    sessionStorage.setItem('stem_role','guest');
-    applyGuestMode();
-    initApp();
-  } else {
-    if(errEl) errEl.style.display = 'block';
-    passEl.value = '';
-    passEl.focus();
-  }
-}
-window.doLogin = doLogin;
+// Login handled by inline script block after login HTML
+var userRole = sessionStorage.getItem('stem_role') || null;
 
 function applyGuestMode(){
-  // Hide all tabs except Dashboard
   document.querySelectorAll('.tab').forEach(function(t){
-    var tab = t.getAttribute('data-tab');
-    if(tab !== 'dashboard') t.style.display = 'none';
+    if(t.getAttribute('data-tab') !== 'dashboard') t.style.display='none';
   });
-  // Hide backup bar
-  var bb = document.querySelector('.backup-bar');
-  if(bb) bb.style.display = 'none';
-  // Switch to dashboard
+  var bb=document.querySelector('.backup-bar'); if(bb) bb.style.display='none';
   showTab('dashboard');
 }
 
 function initApp(){
-  // Show loading and load trades
   document.querySelector('.app').insertAdjacentHTML('afterbegin',
     '<div id="sb-loading" style="background:#f0f8e8;border:1px solid #c8e4a0;border-radius:8px;padding:10px 16px;margin-bottom:12px;font-size:13px;color:#3B6D11;">⏳ Loading trades from database...</div>'
   );
   loadFromSupabase().then(function(){
-    var el = eid('sb-loading');
-    if(el) el.remove();
-    if(userRole === 'guest'){
-      renderDashboard();
-    }
+    var el=document.getElementById('sb-loading'); if(el) el.remove();
+    if(userRole==='guest') renderDashboard();
   });
 }
 
-// Check if already logged in this session
-var savedRole = sessionStorage.getItem('stem_role');
-if(savedRole === 'admin'){
-  userRole = 'admin';
-  eid('login-screen').style.display = 'none';
+if(userRole==='admin'){
+  document.getElementById('login-screen').style.display='none';
   initApp();
-} else if(savedRole === 'guest'){
-  userRole = 'guest';
-  eid('login-screen').style.display = 'none';
-  applyGuestMode();
-  initApp();
-} else {
-  // Show login — defer app init until after login
-  eid('login-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-  eid('login-user').addEventListener('keydown', function(e){ if(e.key==='Enter') eid('login-pass').focus(); });
-  eid('login-btn').addEventListener('click', doLogin);
-  // Focus password field
-  setTimeout(function(){ eid('login-pass').focus(); }, 100);
+} else if(userRole==='guest'){
+  document.getElementById('login-screen').style.display='none';
+  applyGuestMode(); initApp();
 }
 </script>
 </body>

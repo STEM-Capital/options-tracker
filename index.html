@@ -101,8 +101,8 @@ textarea{resize:vertical;min-height:58px}
     </div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in</button>
     <div class="login-error" id="login-error">Incorrect password. Please try again.</div>
-    <div style="margin-top:12px;text-align:center;font-size:12px">
-      <a href="mailto:stemcapital@outlook.com?subject=STEM Tracker - Password Reset&body=Please reset my password for the STEM Capital Options Tracker." style="color:#185FA5;text-decoration:none">Forgot password?</a>
+    <div style="margin-top:10px;text-align:center">
+      <a href="mailto:stemcapital@outlook.com?subject=STEM Tracker - Password Reset&body=Please reset my password for the STEM Capital Options Tracker." style="color:#888;font-size:12px;text-decoration:none">Forgot password?</a>
     </div>
   </div>
 </div>
@@ -159,7 +159,7 @@ function doLogin(){
   <button class="btn btn-imp" id="btn-import-json">Import backup</button>
   <input type="file" id="import-file" accept=".json" style="display:none">
   <span class="backup-note" id="backup-status"></span>
-  <button class="btn" id="btn-logout" style="margin-left:auto;padding:5px 12px;font-size:12px;color:#A32D2D;border-color:#F0C0C0" onclick="doLogout()">Sign out</button>
+  <button class="btn" id="btn-logout" style="margin-left:auto;padding:5px 14px;font-size:12px;font-weight:600;color:#A32D2D;border-color:#F0C0C0;background:#fff;flex-shrink:0" onclick="doLogout()">⎋ Sign out</button>
 </div>
 
 <!-- Close trade modal -->
@@ -1669,7 +1669,12 @@ function applyGuestMode(){
   document.querySelectorAll('.tab').forEach(function(t){
     if(t.getAttribute('data-tab') !== 'dashboard') t.style.display='none';
   });
-  var bb=document.querySelector('.backup-bar'); if(bb) bb.style.display='none';
+  // Hide backup buttons but keep Sign out visible
+  ['btn-export-csv','btn-export-json','btn-import-json'].forEach(function(id){
+    var e=document.getElementById(id); if(e) e.style.display='none';
+  });
+  var lbl=document.querySelector('.backup-bar-lbl'); if(lbl) lbl.style.display='none';
+  var imp=document.getElementById('import-file'); if(imp) imp.style.display='none';
   showTab('dashboard');
 }
 

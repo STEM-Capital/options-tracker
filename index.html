@@ -159,6 +159,7 @@ function doLogin(){
   <button class="btn btn-imp" id="btn-import-json">Import backup</button>
   <input type="file" id="import-file" accept=".json" style="display:none">
   <span class="backup-note" id="backup-status"></span>
+  <button class="btn" id="btn-migrate" style="padding:5px 12px;font-size:12px;background:#7a4500;color:#fff;border-color:#7a4500;display:none" onclick="migrateLocalStorage()">⬆ Import old trades</button>
   <button class="btn" id="btn-logout" style="margin-left:auto;padding:5px 14px;font-size:12px;font-weight:600;color:#A32D2D;border-color:#F0C0C0;background:#fff;flex-shrink:0" onclick="doLogout()">⎋ Sign out</button>
 </div>
 
@@ -887,7 +888,7 @@ function autoCalc(){
     var tot=parseFloat((bcC+bpC).toFixed(2));
     sv('ic-total-credit', tot>0?tot.toFixed(2):'');
     sv('ic-risk',   tot>0?'$'+((10-tot)*100).toFixed(2):'');
-    sv('ic-target', tot>0?'-$'+(Math.floor(tot*pct/0.05)*0.05).toFixed(2):'');
+    if(!gv('ic-target')) sv('ic-target', tot>0?'-$0.30':'');
     var rcv=(tot*filled*100).toFixed(2);
     sv('f-received', tot>0?'$'+rcv:'');
     var pnl=((parseFloat(rcv)||0)-e1p*e1q*100-e2p*e2q*100).toFixed(2);
@@ -902,7 +903,7 @@ function autoCalc(){
     sv('f-risk', Math.abs(short-lng)>0?'$'+((Math.abs(short-lng)-credit)*100).toFixed(2):'');
     var rcv=(credit*filled*100).toFixed(2);
     sv('f-received', credit>0?'$'+rcv:'');
-    sv('f-target',   credit>0?'-$'+(Math.floor(credit*pct/0.05)*0.05).toFixed(2):'');
+    if(!gv('f-target')) sv('f-target', credit>0?'-$0.15':'');
     var pnl=((parseFloat(rcv)||0)-e1p*e1q*100-e2p*e2q*100).toFixed(2);
     var rpnl=((parseFloat(rcv)||0)-e1p*e1q*100-e2p*e2q*100-e1c-e2c-oc).toFixed(2);
     sv('f-pnl',  credit>0?'$'+pnl:'');
@@ -970,10 +971,12 @@ function clearForm(){
   sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);
   sv('f-delta','0.094');
   sv('f-credit','0.65');
+  sv('f-target','-$0.15');
   sv('ic-bc-delta','0.094');
   sv('ic-bp-delta','0.094');
   sv('ic-bc-credit','0.50');
   sv('ic-bp-credit','0.50');
+  sv('ic-target','-$0.30');
   onDirChange();
 }
 
@@ -1657,6 +1660,27 @@ on('import-file','change',function(){
 // ── Init ──────────────────────────────────────────────────────────────────
 // Trades loaded via initApp() after login
 
+// ── One-time localStorage migration ──────────────────────────────────────
+function migrateLocalStorage(){
+  var raw = localStorage.getItem('options_tracker_v1');
+  if(!raw){ showStatus('No old trades found in this browser.','warn'); return; }
+  try {
+    var old = JSON.parse(raw);
+    if(!Array.isArray(old)||old.length===0){ showStatus('No trades found to migrate.','warn'); return; }
+    if(!confirm('Found '+old.length+' trade(s) in browser storage. Import them into Supabase now?')) return;
+    var existing = new Set(trades.map(function(t){ return t.id; }));
+    var toAdd = old.filter(function(t){ return !existing.has(t.id); });
+    if(toAdd.length===0){ showStatus('All trades already exist in Supabase.'); return; }
+    toAdd.forEach(function(t){ trades.push(t); });
+    Promise.all(toAdd.map(upsertTrade)).then(function(){
+      showStatus('✓ Migrated '+toAdd.length+' trade(s) to Supabase successfully!');
+      localStorage.removeItem('options_tracker_v1');
+      var btn=document.getElementById('btn-migrate'); if(btn) btn.style.display='none';
+      renderOpen(); renderClosed();
+    });
+  } catch(e){ showStatus('Migration error: '+e.message,'error'); }
+}
+
 var today=new Date().toISOString().split('T')[0]; sv('f-open-date',today);
 var dte=nextFriday(today);
 sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);
@@ -1685,6 +1709,13 @@ function initApp(){
   loadFromSupabase().then(function(){
     var el=document.getElementById('sb-loading'); if(el) el.remove();
     if(userRole==='guest') renderDashboard();
+    // Show migration button if old localStorage trades exist
+    if(userRole==='admin'){
+      try{
+        var old=localStorage.getItem('options_tracker_v1');
+        if(old){ var arr=JSON.parse(old); if(arr&&arr.length>0){ var btn=document.getElementById('btn-migrate'); if(btn) btn.style.display='inline-block'; } }
+      }catch(e){}
+    }
   });
 }
 

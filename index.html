@@ -93,13 +93,13 @@ textarea{resize:vertical;min-height:58px}
     </div>
     <div class="login-field">
       <label>Username</label>
-      <input type="text" id="login-user" placeholder="Enter username" autocomplete="username">
+      <input type="text" id="login-user" placeholder="Enter username" autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('login-pass').focus()">
     </div>
     <div class="login-field">
       <label>Password</label>
-      <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password">
+      <input type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
     </div>
-    <button class="login-btn" id="login-btn">Sign in</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in</button>
     <div class="login-error" id="login-error">Incorrect password. Please try again.</div>
   </div>
 </div>
@@ -1629,25 +1629,30 @@ var GUEST_PASS = '*b2DF*og:yLp';
 var userRole = null; // 'admin' or 'guest'
 
 function doLogin(){
-  var user = eid('login-user').value.trim();
-  var pass = eid('login-pass').value;
-  if(user === 'STEM' && pass === ADMIN_PASS){
+  var userEl=document.getElementById('login-user');
+  var passEl=document.getElementById('login-pass');
+  var errEl=document.getElementById('login-error');
+  if(!userEl||!passEl) return;
+  var user = userEl.value.trim();
+  var pass = passEl.value;
+  if(user === 'STEM' && pass === '*VHmt*Zx=z2w'){
     userRole = 'admin';
-    eid('login-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
     sessionStorage.setItem('stem_role','admin');
     initApp();
-  } else if(user === 'Holly' && pass === GUEST_PASS){
+  } else if(user === 'Holly' && pass === '*b2DF*og:yLp'){
     userRole = 'guest';
-    eid('login-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
     sessionStorage.setItem('stem_role','guest');
     applyGuestMode();
     initApp();
   } else {
-    eid('login-error').style.display = 'block';
-    eid('login-pass').value = '';
-    eid('login-pass').focus();
+    if(errEl) errEl.style.display = 'block';
+    passEl.value = '';
+    passEl.focus();
   }
 }
+window.doLogin = doLogin;
 
 function applyGuestMode(){
   // Hide all tabs except Dashboard

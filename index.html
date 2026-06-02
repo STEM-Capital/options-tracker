@@ -196,6 +196,29 @@ function doLogin(){
   </div>
 </div>
 
+<!-- PARTIAL CLOSE MODAL -->
+<div id="partial-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">Close partial — <span id="partial-modal-ticker"></span></div>
+    <p style="font-size:12px;color:#777;margin-bottom:14px">Record a partial exit. The trade stays open for the remaining quantity.</p>
+    <div class="fg">
+      <div class="fgrp"><span class="lbl">Exit price (¢)</span><input id="pm-price" type="number" step="0.01"></div>
+      <div class="fgrp"><span class="lbl">Qty closed</span><input id="pm-qty" type="number" min="1" value="1"></div>
+      <div class="fgrp"><span class="lbl">Commission ($)</span><input id="pm-comm" type="number" step="0.01" value="0"></div>
+    </div>
+    <div class="fg">
+      <div class="fgrp"><span class="lbl">Exit date</span><input id="pm-date" type="date"></div>
+      <div class="fgrp"><span class="lbl">Partial P&L ($)</span><input id="pm-pnl" readonly></div>
+      <div class="fgrp"><span class="lbl">Remaining qty</span><input id="pm-remaining" readonly style="font-weight:600;color:#185FA5"></div>
+    </div>
+    <div class="fgrp" style="margin-bottom:14px"><span class="lbl">Notes</span><textarea id="pm-notes" placeholder="Notes on this partial exit…"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" id="btn-confirm-partial">Record partial exit</button>
+      <button class="btn" id="btn-cancel-partial">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Tabs -->
 <div class="tabs">
   <div class="tab active" data-tab="entry">+ Entry</div>
@@ -1002,6 +1025,14 @@ function makeCloseBtn(id){
   return btn;
 }
 
+function makePartialCloseBtn(id){
+  var btn=document.createElement('button');
+  btn.className='btn'; btn.textContent='Partial';
+  btn.style.cssText='padding:4px 10px;font-size:12px;color:#185FA5;border-color:#185FA5;background:#fff';
+  btn.addEventListener('click',(function(tid){ return function(){ openPartialModal(tid); }; })(id));
+  return btn;
+}
+
 // ── Close modal ───────────────────────────────────────────────────────────
 function openCloseModal(id){
   var t=trades.find(function(x){ return x.id===id; }); if(!t) return;
@@ -1081,6 +1112,7 @@ function renderOpen(){
     var wr=document.createElement('div');
     wr.style.cssText='display:flex;gap:5px;align-items:center;flex-wrap:wrap';
     wr.appendChild(makeCloseBtn(t.id));
+    wr.appendChild(makePartialCloseBtn(t.id));
     wr.appendChild(makeDeleteBtn(t.id));
     ac.appendChild(wr);
   });
@@ -1438,6 +1470,87 @@ function confirmEdit(){
   renderPending();
 }
 
+// ── Partial Close ────────────────────────────────────────────────────────
+var partialId = null;
+
+function openPartialModal(id){
+  var t=trades.find(function(x){ return x.id===id; }); if(!t) return;
+  partialId=id;
+  eid('partial-modal-ticker').textContent=t.ticker+' — '+t.dir+' ('+formatDate(t.openDate)+')';
+  sv('pm-price',''); sv('pm-qty','1'); sv('pm-comm','0'); sv('pm-notes','');
+  sv('pm-date', new Date().toISOString().split('T')[0]);
+  sv('pm-pnl','');
+  // Show remaining qty
+  var filled=parseInt(t.filled)||0;
+  var partials=t.partials||[];
+  var closedQty=partials.reduce(function(a,p){ return a+(parseInt(p.qty)||0); },0);
+  sv('pm-remaining', (filled-closedQty));
+  eid('partial-modal').classList.add('open');
+  calcPartialPnl();
+}
+
+function calcPartialPnl(){
+  var t=trades.find(function(x){ return x.id===partialId; }); if(!t) return;
+  var price=parseFloat(gv('pm-price'))||0;
+  var qty=parseInt(gv('pm-qty'))||0;
+  var comm=parseFloat(gv('pm-comm'))||0;
+  var rcvPerContract=parseFloat(t.credit||t.debit||'0')||0;
+  var filled=parseInt(t.filled)||0;
+  var partials=t.partials||[];
+  var closedQty=partials.reduce(function(a,p){ return a+(parseInt(p.qty)||0); },0);
+  var remaining=filled-closedQty-qty;
+  sv('pm-remaining', remaining>=0?remaining:'Invalid qty');
+  if(price>0&&qty>0){
+    var rcv=rcvPerContract*qty*100;
+    var cost=price*qty*100;
+    var pnl=t.isDir?(rcv-cost-comm).toFixed(2):(rcv-cost-comm>=0?(rcv-cost-comm).toFixed(2):(rcv-cost-comm).toFixed(2));
+    if(!t.isDir) pnl=(rcv-cost-comm).toFixed(2);
+    sv('pm-pnl','$'+pnl);
+  } else { sv('pm-pnl',''); }
+}
+
+function confirmPartial(){
+  if(!partialId) return;
+  var idx=trades.findIndex(function(x){ return x.id===partialId; }); if(idx<0) return;
+  var t=trades[idx];
+  var price=parseFloat(gv('pm-price'))||0;
+  var qty=parseInt(gv('pm-qty'))||0;
+  var comm=parseFloat(gv('pm-comm'))||0;
+  var date=gv('pm-date');
+  var notes=gv('pm-notes');
+  if(!price||!qty){ alert('Please enter exit price and quantity.'); return; }
+  var filled=parseInt(t.filled)||0;
+  var partials=t.partials||[];
+  var closedQty=partials.reduce(function(a,p){ return a+(parseInt(p.qty)||0); },0);
+  if(qty>filled-closedQty){ alert('Quantity exceeds remaining open contracts.'); return; }
+  var rcv=parseFloat(t.credit||t.debit||'0')||0;
+  var pnl=((rcv-price)*qty*100-comm);
+  if(t.isDir) pnl=((price-rcv)*qty*100-comm);
+  var partial={date:date,price:price,qty:qty,comm:comm,pnl:pnl.toFixed(2),notes:notes};
+  if(!trades[idx].partials) trades[idx].partials=[];
+  trades[idx].partials.push(partial);
+  // Store partials as JSON string in comments field supplement
+  // Also store in a dedicated field
+  var newClosedQty=closedQty+qty;
+  // If fully closed, move to closed trades
+  if(newClosedQty>=filled){
+    var totalPnl=trades[idx].partials.reduce(function(a,p){ return a+parseFloat(p.pnl); },0);
+    var totalComm=trades[idx].partials.reduce(function(a,p){ return a+(parseFloat(p.comm)||0); },0);
+    trades[idx].closeDate=date;
+    trades[idx].exitReason='Partial Close';
+    trades[idx].pnl='$'+totalPnl.toFixed(2);
+    trades[idx].rpnl='$'+(totalPnl).toFixed(2);
+    trades[idx].wl=totalPnl>0?'Win':totalPnl<0?'Loss':'';
+    trades[idx].comments=(trades[idx].comments?trades[idx].comments+' | ':'')+'Partials: '+trades[idx].partials.map(function(p){ return p.qty+'@'+p.price+'¢ ('+formatDate(p.date)+')'; }).join(', ');
+  }
+  // Store partial history in comments as supplement
+  upsertTrade(trades[idx]);
+  eid('partial-modal').classList.remove('open');
+  partialId=null;
+  renderOpen(); renderClosed();
+  if(newClosedQty>=filled) showTab('closed');
+}
+
 function showTab(t){
   var allTabs=['entry','filled','open','closed','dashboard','expmove','setup'];
   document.querySelectorAll('.tab').forEach(function(e,i){
@@ -1634,6 +1747,10 @@ on('btn-confirm-fill','click',confirmFill);
 on('btn-cancel-fill','click',function(){ eid('fill-modal').classList.remove('open'); fillingId=null; });
 on('fill-modal','click',function(e){ if(e.target===this){ this.classList.remove('open'); fillingId=null; } });
 on('btn-confirm-edit','click',confirmEdit);
+on('btn-confirm-partial','click',confirmPartial);
+on('btn-cancel-partial','click',function(){ eid('partial-modal').classList.remove('open'); partialId=null; });
+on('partial-modal','click',function(e){ if(e.target===this){ this.classList.remove('open'); partialId=null; } });
+['pm-price','pm-qty','pm-comm'].forEach(function(id){ on(id,'input',calcPartialPnl); });
 on('btn-cancel-edit','click',function(){ eid('edit-modal').classList.remove('open'); });
 on('edit-modal','click',function(e){ if(e.target===this){ this.classList.remove('open'); } });['fm-filled','fm-credit','fm-comm'].forEach(function(id){ eid(id).addEventListener('input',calcFillReceived); });
 ['fm-ic-filled','fm-bc-credit','fm-bp-credit','fm-ic-comm'].forEach(function(id){ var e=eid(id); if(e) e.addEventListener('input',calcFillReceivedIC); });

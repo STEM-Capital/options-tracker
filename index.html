@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+.guest-mode .btn-b,.guest-mode .btn-r{display:none!important}
 .login-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#f0ede6;display:flex;align-items:center;justify-content:center;z-index:9999}
 .login-box{background:#fff;border:1px solid #d0cdc6;border-radius:12px;padding:32px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
 .login-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px}
@@ -312,10 +313,11 @@ function doLogin(){
       <th style="width:55px">Setup</th>
       <th style="width:80px">Direction</th>
       <th style="width:65px">Strike(s)</th>
+      <th style="width:40px">Width</th>
       <th style="width:38px">DTE</th>
       <th style="width:70px">Credit ($)</th>
       <th style="width:60px">Ordered</th>
-      <th style="width:75px">Target (¢)</th>
+      <th style="width:75px">Target ($)</th>
       <th style="width:80px">Comments</th>
       <th style="width:150px">Actions</th>
     </tr></thead>
@@ -447,7 +449,7 @@ function doLogin(){
   <div class="tw"><table class="tt">
     <thead><tr>
       <th style="width:55px">Ticker</th><th style="width:70px">Open</th><th style="width:55px">Setup</th>
-      <th style="width:82px">Direction</th><th style="width:65px">Strike(s)</th><th style="width:38px">DTE</th>
+      <th style="width:82px">Direction</th><th style="width:65px">Strike(s)</th><th style="width:40px">Width</th><th style="width:38px">DTE</th>
       <th style="width:70px">Credit/Debit</th><th style="width:80px">Rcvd/Paid</th>
       <th style="width:60px">Target</th><th style="width:46px">Filled</th><th style="width:140px">Actions</th>
     </tr></thead>
@@ -1060,9 +1062,16 @@ function renderOpen(){
     var row=tbody.insertRow();
     var cl=t.isDir?(t.debit?'$'+parseFloat(t.debit).toFixed(2)+' debit':'—'):(t.credit?'$'+parseFloat(t.credit).toFixed(2):'—');
     var tg=t.isDir?'—':(t.target?t.target:'—');
+    var ow='—';
+    if(!t.isDir&&t.short&&t.long){
+      var os1=String(t.short).split('/')[0].trim(), ol1=String(t.long).split('/')[0].trim();
+      var ow2=Math.abs(parseFloat(os1)-parseFloat(ol1));
+      if(!isNaN(ow2)&&ow2>0) ow=ow2;
+    }
     [['<strong>'+t.ticker+'</strong>'],
      [formatDate(t.openDate)],[(t.setup||'—')],[dirBadge(t.dir)],
      ['<span style="font-size:11px">'+(t.short||'')+'</span>'],
+     ['<span style="font-size:11px">'+ow+'</span>'],
      [t.dte||''],
      [cl],[t.received||'—'],
      ['<span style="color:#A32D2D">'+tg+'</span>'],
@@ -1260,9 +1269,18 @@ function renderPending(){
   pending.forEach(function(t){
     var row=tbody.insertRow();
     var cl=t.isDir?(t.debit?'$'+parseFloat(t.debit).toFixed(2)+' debit':'—'):(t.credit?'$'+parseFloat(t.credit).toFixed(2):'—');
+    // Calculate width for pending row
+    var fw='—';
+    if(!t.isDir&&t.short&&t.long){
+      var fs=String(t.short).split('/')[0].trim();
+      var fl=String(t.long).split('/')[0].trim();
+      var fw2=Math.abs(parseFloat(fs)-parseFloat(fl));
+      if(!isNaN(fw2)&&fw2>0) fw=fw2;
+    }
     [['<strong>'+t.ticker+'</strong>'],
      [formatDate(t.openDate)],[(t.setup||'—')],[dirBadge(t.dir)],
      ['<span style="font-size:11px">'+(t.short||'')+'</span>'],
+     ['<span style="font-size:11px">'+fw+'</span>'],
      [t.dte||''],
      [cl],[t.ordered||''],
      ['<span style="color:#A32D2D">'+(t.target?t.target:'—')+'</span>'],
@@ -1691,7 +1709,8 @@ var userRole = sessionStorage.getItem('stem_role') || null;
 
 function applyGuestMode(){
   document.querySelectorAll('.tab').forEach(function(t){
-    if(t.getAttribute('data-tab') !== 'dashboard') t.style.display='none';
+    var tab=t.getAttribute('data-tab');
+    if(tab!=='dashboard'&&tab!=='open') t.style.display='none';
   });
   // Hide backup buttons but keep Sign out visible
   ['btn-export-csv','btn-export-json','btn-import-json'].forEach(function(id){
@@ -1699,6 +1718,8 @@ function applyGuestMode(){
   });
   var lbl=document.querySelector('.backup-bar-lbl'); if(lbl) lbl.style.display='none';
   var imp=document.getElementById('import-file'); if(imp) imp.style.display='none';
+  // Mark body as guest so CSS can hide action buttons
+  document.body.classList.add('guest-mode');
   showTab('dashboard');
 }
 

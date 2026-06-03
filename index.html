@@ -476,7 +476,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
       <th style="width:55px">Ticker</th><th style="width:70px">Open</th><th style="width:55px">Setup</th>
       <th style="width:82px">Direction</th><th style="width:65px">Strike(s)</th><th style="width:40px">Width</th><th style="width:38px">DTE</th>
       <th style="width:70px">Credit/Debit</th><th style="width:80px">Rcvd/Paid</th>
-      <th style="width:60px">Target</th><th style="width:46px">Filled</th><th style="width:140px">Actions</th>
+      <th style="width:60px">Target</th><th style="width:46px">Filled</th><th style="width:80px">Partial Closed</th><th style="width:65px">Remaining</th><th style="width:140px">Actions</th>
     </tr></thead>
     <tbody id="open-tbody"></tbody>
   </table></div>
@@ -1147,6 +1147,20 @@ function renderOpen(){
      ['<span style="color:#A32D2D">'+tg+'</span>'],
      [t.filled||'']
     ].forEach(function(h){ row.insertCell().innerHTML=h[0]; });
+    // Partial closed + Remaining columns
+    var partials=t.partials||[];
+    var closedQty=partials.reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
+    var filledQty=parseInt(t.filled)||0;
+    var remainQty=filledQty-closedQty;
+    var partialCell=row.insertCell();
+    var remainCell=row.insertCell();
+    if(partials.length>0){
+      partialCell.innerHTML='<span style="background:#fff3cd;color:#856404;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600">'+closedQty+' of '+filledQty+'</span>';
+      remainCell.innerHTML='<span style="background:#ddeeff;color:#0c4480;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600">'+remainQty+'</span>';
+    } else {
+      partialCell.innerHTML='<span style="color:#ccc;font-size:11px">—</span>';
+      remainCell.innerHTML='<span style="color:#ccc;font-size:11px">—</span>';
+    }
     var ac=row.insertCell();
     var wr=document.createElement('div');
     wr.style.cssText='display:flex;gap:5px;align-items:center;flex-wrap:wrap';
@@ -1748,7 +1762,7 @@ on('btn-cancel-fill','click',function(){ eid('fill-modal').classList.remove('ope
 on('fill-modal','click',function(e){ if(e.target===this){ this.classList.remove('open'); fillingId=null; } });
 on('btn-confirm-edit','click',confirmEdit);
 on('btn-cancel-edit','click',function(){ eid('edit-modal').classList.remove('open'); });
-on('edit-modal','click',function(e){ if(e.target===this){ this.classList.remove('open'); } });['fm-filled','fm-credit','fm-comm'].forEach(function(id){ eid(id).addEventListener('input',calcFillReceived);
+on('edit-modal','click',function(e){ if(e.target===this){ this.classList.remove('open'); } });['fm-filled','fm-credit','fm-comm'].forEach(function(id){ var e=eid(id); if(e) e.addEventListener('input',calcFillReceived);
 ['fm-ic-filled','fm-bc-credit','fm-bp-credit','fm-ic-comm'].forEach(function(id){ var e=eid(id); if(e) e.addEventListener('input',calcFillReceivedIC); }); });
 on('btn-clear','click',clearForm);
 on('btn-confirm-close','click',confirmClose);
@@ -1774,10 +1788,10 @@ on('ic-bp-credit','input',autoCalc);
 on('f-credit','input',autoCalc);
 on('dir-debit','input',autoCalc);
 ['f-e1p','f-e1q','f-e1c','f-e2p','f-e2q','f-e2c'].forEach(function(id){
-  eid(id).addEventListener('input',autoCalc);
+  var e=eid(id); if(e) e.addEventListener('input',autoCalc);
 });
 ['m-e1p','m-e1q','m-e1c','m-e2p','m-e2q','m-e2c','m-cd'].forEach(function(id){
-  eid(id).addEventListener('input',mCalc);
+  var e=eid(id); if(e) e.addEventListener('input',mCalc);
 });
 ['m-bc-exit','m-bc-exit2','m-bc-comm','m-bp-exit','m-bp-exit2','m-bp-comm','m-full-exit','m-full-comm'].forEach(function(id){ var e=eid(id); if(e) e.addEventListener('input',function(){ var side=eid('close-modal').getAttribute('data-side')||'full'; mCalcIC(side); }); });
 var mcdEl=eid('m-cd'); if(mcdEl) mcdEl.addEventListener('input',function(){ var t=trades.find(function(x){return x.id===closingId;}); if(t&&t.dir==='Iron Condor'){mCalcIC(eid('close-modal').getAttribute('data-side')||'full');}else mCalc(); });

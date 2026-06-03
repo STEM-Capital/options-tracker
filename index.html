@@ -1744,11 +1744,17 @@ function calcPartialPnl(){
   var t=trades.find(function(x){return x.id===partialId;}); if(!t) return;
   var price=parseFloat(gv('pm-price'))||0, qty=parseInt(gv('pm-qty'))||0, comm=parseFloat(gv('pm-comm'))||0;
   var filled=parseInt(t.filled)||0;
-  var closedQty=(t.partials||[]).reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
+  var side=partialSide||'full';
+  var ic=t.dir==='Iron Condor';
+  var legKey=(ic&&side!=='full')?side:null;
+  // Only count partials for this specific leg
+  var legPartials=(t.partials||[]).filter(function(p){
+    return legKey ? p.side===legKey : (!p.side||p.side==='full');
+  });
+  var closedQty=legPartials.reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
   var openQty=filled-closedQty;
   sv('pm-remaining',Math.max(0,openQty-qty));
   // Get entry credit/debit for this specific side
-  var side=partialSide||'full';
   var entryCredit;
   if(t.dir==='Iron Condor'){
     if(side==='bc') entryCredit=parseFloat(t.bcCredit||'0')||0;

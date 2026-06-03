@@ -1223,6 +1223,12 @@ function renderOpen(){
     wr.style.cssText='display:flex;gap:5px;align-items:center;flex-wrap:wrap';
     wr.appendChild(makeCloseBtn(t.id));
     wr.appendChild(makePartialCloseBtn(t.id));
+    // Edit button
+    var oeb=document.createElement('button');
+    oeb.className='btn btn-b'; oeb.style.cssText='padding:4px 10px;font-size:12px';
+    oeb.textContent='Edit';
+    oeb.addEventListener('click',(function(tid){ return function(){ openEditOpenModal(tid); }; })(t.id));
+    wr.appendChild(oeb);
     wr.appendChild(makeDeleteBtn(t.id));
     ac.appendChild(wr);
   });
@@ -1659,6 +1665,27 @@ function autoFillE2Qty(){
     sv('m-e2q', Math.max(0, remaining-e1q));
   }
   mCalc();
+}
+
+// ── Edit open trade ──────────────────────────────────────────────────────
+function openEditOpenModal(id){
+  var t=trades.find(function(x){ return x.id===id; }); if(!t) return;
+  // Reuse the edit pending modal (same fields apply)
+  eid('edit-modal-ticker').textContent=t.ticker+' — '+t.dir;
+  sv('em-ticker', t.ticker||'');
+  sv('em-open-date', t.openDate||'');
+  sv('em-dir', t.dir||'Bull Put');
+  sv('em-setup', t.setup||'');
+  sv('em-short', t.short||'');
+  sv('em-long', t.long||'');
+  sv('em-dte', t.dte||'');
+  sv('em-delta', t.delta||'');
+  sv('em-credit', t.credit||t.debit||'');
+  sv('em-ordered', t.ordered||'5');
+  sv('em-target', t.target||'');
+  sv('em-comments', t.comments||'');
+  eid('edit-modal').classList.add('open');
+  eid('edit-modal').setAttribute('data-editing-id', id);
 }
 
 // ── Reopen trade (remove close details) ──────────────────────────────────

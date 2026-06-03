@@ -467,6 +467,12 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
       <div class="fgrp"><span class="lbl">Target ($)</span><input id="em-target"></div>
     </div>
     <div class="fgrp" style="margin-bottom:14px"><span class="lbl">Comments</span><textarea id="em-comments" placeholder="Notes…"></textarea></div>
+    <!-- Partial closes section -->
+    <div id="em-partials-section" style="display:none;margin-bottom:16px">
+      <div class="sh" style="margin-top:8px">Partial closes</div>
+      <div id="em-partials-list" style="font-size:12px"></div>
+    </div>
+
     <div style="display:flex;gap:8px">
       <button class="btn btn-g" id="btn-confirm-edit">Save changes</button>
       <button class="btn" id="btn-cancel-edit">Cancel</button>
@@ -1622,6 +1628,44 @@ function openEditModal(id){
   eid('edit-modal').classList.add('open');
   // store editing id on the modal
   eid('edit-modal').setAttribute('data-editing-id', id);
+  // Show partials if any
+  var ps=document.getElementById('em-partials-section');
+  var t2=trades.find(function(x){return x.id===id;});
+  if(t2&&t2.partials&&t2.partials.length>0&&ps){ ps.style.display='block'; renderEditPartials(id); }
+  else if(ps) ps.style.display='none';
+}
+
+function renderEditPartials(id){
+  var t=trades.find(function(x){return x.id===id;}); if(!t||!t.partials) return;
+  var list=document.getElementById('em-partials-list'); if(!list) return;
+  list.innerHTML=t.partials.map(function(p,i){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0ede6">'+
+      '<span style="flex:1;color:#555;font-size:12px">'+formatDate(p.date)+' — '+p.qty+' contracts @ $'+p.price+
+      (p.side&&p.side!=='full'?' ('+p.side.toUpperCase()+')':'')+' — P&L: $'+p.pnl+'</span>'+
+      '<button onclick="deleteEditPartial('+id+','+i+')" style="padding:2px 8px;font-size:11px;color:#A32D2D;border:1px solid #F0C0C0;border-radius:4px;background:#fff;cursor:pointer;flex-shrink:0">Remove</button>'+
+    '</div>';
+  }).join('')||'<span style="color:#999;font-size:12px">No partials recorded.</span>';
+}
+
+function deleteEditPartial(id,index){
+  if(!confirm('Remove this partial close entry?')) return;
+  var idx=trades.findIndex(function(x){return x.id===id;}); if(idx<0) return;
+  trades[idx].partials.splice(index,1);
+  // Reset IC leg flags if all leg partials were removed
+  var remaining=trades[idx].partials;
+  var bcLeft=remaining.filter(function(p){return p.side==='bc';});
+  var bpLeft=remaining.filter(function(p){return p.side==='bp';});
+  if(trades[idx].bcClosed&&bcLeft.length===0){
+    trades[idx].bcClosed=false; trades[idx].bcClosePnl='';
+    trades[idx].bcCloseDate=''; trades[idx].bcClosePrice='';
+  }
+  if(trades[idx].bpClosed&&bpLeft.length===0){
+    trades[idx].bpClosed=false; trades[idx].bpClosePnl='';
+    trades[idx].bpCloseDate=''; trades[idx].bpClosePrice='';
+  }
+  upsertTrade(trades[idx]);
+  renderEditPartials(id);
+  renderOpen();
 }
 
 function confirmEdit(){
@@ -1834,6 +1878,11 @@ function openEditOpenModal(id){
   sv('em-comments', t.comments||'');
   eid('edit-modal').classList.add('open');
   eid('edit-modal').setAttribute('data-editing-id', id);
+  // Show partials if any
+  var ps2=document.getElementById('em-partials-section');
+  var t3=trades.find(function(x){return x.id===id;});
+  if(t3&&t3.partials&&t3.partials.length>0&&ps2){ ps2.style.display='block'; renderEditPartials(id); }
+  else if(ps2) ps2.style.display='none';
 }
 
 // ── Reopen trade (remove close details) ──────────────────────────────────

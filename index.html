@@ -463,6 +463,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
         </div>
       </div>
       <div class="fgrp"><span class="lbl">Ordered</span><input id="em-ordered" type="number" min="1"></div>
+      <div class="fgrp"><span class="lbl">Filled</span><input id="em-filled" type="number" min="1"></div>
       <div class="fgrp"><span class="lbl">Target ($)</span><input id="em-target"></div>
     </div>
     <div class="fgrp" style="margin-bottom:14px"><span class="lbl">Comments</span><textarea id="em-comments" placeholder="Notes…"></textarea></div>
@@ -1551,6 +1552,7 @@ function openEditModal(id){
   sv('em-delta', t.delta||'');
   sv('em-credit', t.credit||t.debit||'');
   sv('em-ordered', t.ordered||'5');
+  sv('em-filled', t.filled||t.ordered||'5');
   sv('em-target', t.target||'');
   sv('em-comments', t.comments||'');
   eid('edit-modal').classList.add('open');
@@ -1573,6 +1575,7 @@ function confirmEdit(){
   if(isD) trades[idx].debit  = gv('em-credit');
   else     trades[idx].credit = gv('em-credit');
   trades[idx].ordered  = gv('em-ordered');
+  trades[idx].filled   = gv('em-filled');
   trades[idx].target   = gv('em-target');
   trades[idx].comments = gv('em-comments');
   upsertTrade(trades[idx]);
@@ -1682,6 +1685,7 @@ function openEditOpenModal(id){
   sv('em-delta', t.delta||'');
   sv('em-credit', t.credit||t.debit||'');
   sv('em-ordered', t.ordered||'5');
+  sv('em-filled', t.filled||t.ordered||'5');
   sv('em-target', t.target||'');
   sv('em-comments', t.comments||'');
   eid('edit-modal').classList.add('open');

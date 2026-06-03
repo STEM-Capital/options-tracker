@@ -284,7 +284,8 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
     <div class="fg6">
       <div class="fgrp"><span class="lbl">Short strike</span><input id="f-short" type="number" step="5"></div>
       <div class="fgrp"><span class="lbl">Long strike</span><input id="f-long"></div>
-      <div class="fgrp"><span class="lbl">DTE</span><input id="f-dte" readonly></div>
+      <div class="fgrp"><span class="lbl">DTE</span><input id="f-dte" type="number" min="0" oninput="dteToDate('f-dte','f-expiry')"></div>
+      <div class="fgrp"><span class="lbl">Expiry date</span><input id="f-expiry" type="date" oninput="dateTodte('f-expiry','f-dte','f-open-date')"></div>
       <div class="fgrp"><span class="lbl">Short Δ</span><input id="f-delta" type="number" step="0.001" value="0.094"></div>
       <div class="fgrp"><span class="lbl">Credit ($)</span><div style="position:relative;display:flex;align-items:center"><span style="position:absolute;left:9px;font-size:13px;color:#777;pointer-events:none;z-index:1">$</span><input style="padding-left:22px;" id="f-credit" type="text" inputmode="decimal" value="0.65"></div></div>
       <div class="fgrp"><span class="lbl">Risk ($)</span><input id="f-risk" readonly></div>
@@ -297,7 +298,8 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
     <div class="fg4">
       <div class="fgrp"><span class="lbl">Short strike</span><input id="ic-bc-short" type="number" step="5"></div>
       <div class="fgrp"><span class="lbl">Long strike</span><input id="ic-bc-long"></div>
-      <div class="fgrp"><span class="lbl">DTE</span><input id="ic-bc-dte" readonly></div>
+      <div class="fgrp"><span class="lbl">DTE</span><input id="ic-bc-dte" type="number" min="0" oninput="dteToDate('ic-bc-dte','ic-bc-expiry')"></div>
+      <div class="fgrp"><span class="lbl">Expiry date</span><input id="ic-bc-expiry" type="date" oninput="dateTodte('ic-bc-expiry','ic-bc-dte','f-open-date')"></div>
       <div class="fgrp"><span class="lbl">Short Δ</span><input id="ic-bc-delta" type="number" step="0.001" value="0.094"></div>
     </div>
   </div>
@@ -308,7 +310,8 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
     <div class="fg4">
       <div class="fgrp"><span class="lbl">Short strike</span><input id="ic-bp-short" type="number" step="5"></div>
       <div class="fgrp"><span class="lbl">Long strike</span><input id="ic-bp-long"></div>
-      <div class="fgrp"><span class="lbl">DTE</span><input id="ic-bp-dte" readonly></div>
+      <div class="fgrp"><span class="lbl">DTE</span><input id="ic-bp-dte" type="number" min="0" oninput="dteToDate('ic-bp-dte','ic-bp-expiry')"></div>
+      <div class="fgrp"><span class="lbl">Expiry date</span><input id="ic-bp-expiry" type="date" oninput="dateTodte('ic-bp-expiry','ic-bp-dte','f-open-date')"></div>
       <div class="fgrp"><span class="lbl">Short Δ</span><input id="ic-bp-delta" type="number" step="0.001" value="0.094"></div>
     </div>
   </div>
@@ -330,7 +333,8 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
     <div class="leg-lbl" id="dir-leg-lbl" style="color:#0c4480">Long Call — directional hedge</div>
     <div class="fg5">
       <div class="fgrp"><span class="lbl">Strike</span><input id="dir-strike" type="number" step="1"></div>
-      <div class="fgrp"><span class="lbl">DTE</span><input id="dir-dte" readonly></div>
+      <div class="fgrp"><span class="lbl">DTE</span><input id="dir-dte" type="number" min="0" oninput="dteToDate('dir-dte','dir-expiry')"></div>
+      <div class="fgrp"><span class="lbl">Expiry date</span><input id="dir-expiry" type="date" oninput="dateTodte('dir-expiry','dir-dte','f-open-date')"></div>
       <div class="fgrp"><span class="lbl">Delta</span><input id="dir-delta" type="number" step="0.01" placeholder="0.40"></div>
       <div class="fgrp"><span class="lbl">Debit ($)</span><div style="position:relative;display:flex;align-items:center"><span style="position:absolute;left:9px;font-size:13px;color:#777;pointer-events:none;z-index:1">$</span><input style="padding-left:22px;" id="dir-debit" type="text" inputmode="decimal"></div></div>
       <div class="fgrp"><span class="lbl">Total debit ($)</span><div style="position:relative;display:flex;align-items:center"><span style="position:absolute;left:9px;font-size:13px;color:#777;pointer-events:none;z-index:1">$</span><input style="padding-left:22px;" id="dir-total-debit" readonly></div></div>
@@ -803,6 +807,11 @@ function setDTEs(){
   var v=gv('f-open-date'); if(!v) return;
   var d=nextFriday(v);
   sv('f-dte',d); sv('ic-bc-dte',d); sv('ic-bp-dte',d); sv('dir-dte',d);
+  // Also update expiry date fields
+  dteToDate('f-dte','f-expiry');
+  dteToDate('ic-bc-dte','ic-bc-expiry');
+  dteToDate('ic-bp-dte','ic-bp-expiry');
+  dteToDate('dir-dte','dir-expiry');
 }
 
 function onDirChange(){
@@ -935,6 +944,7 @@ function saveTrade(){
     short: ic ? gv('ic-bc-short')+' / '+gv('ic-bp-short') : d2 ? gv('dir-strike') : gv('f-short'),
     long:  ic ? gv('ic-bc-long')+' / '+gv('ic-bp-long')   : d2 ? '' : gv('f-long'),
     dte:   ic ? gv('ic-bc-dte') : d2 ? gv('dir-dte') : gv('f-dte'),
+    expiry: ic ? gv('ic-bc-expiry') : d2 ? gv('dir-expiry') : gv('f-expiry'),
     delta: ic ? gv('ic-bc-delta')+' / '+gv('ic-bp-delta') : d2 ? gv('dir-delta') : gv('f-delta'),
     credit: ic ? gv('ic-total-credit') : d2 ? '' : gv('f-credit'),
     debit:  d2 ? gv('dir-debit') : '',
@@ -974,6 +984,10 @@ function clearForm(){
   sv('f-open-date',today);
   var dte=nextFriday(today);
   sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);
+  dteToDate('f-dte','f-expiry');
+  dteToDate('ic-bc-dte','ic-bc-expiry');
+  dteToDate('ic-bp-dte','ic-bp-expiry');
+  dteToDate('dir-dte','dir-expiry');
   sv('f-delta','0.094');
   sv('f-credit','0.65');
   sv('ic-bc-delta','0.094');
@@ -1885,6 +1899,26 @@ function openEditOpenModal(id){
   else if(ps2) ps2.style.display='none';
 }
 
+// ── DTE ↔ Expiry Date sync ───────────────────────────────────────────────
+function dteToDate(dteId, dateId){
+  var openDate=gv('f-open-date');
+  var dte=parseInt(gv(dteId));
+  if(!openDate||isNaN(dte)||dte<0) return;
+  var d=new Date(openDate+'T12:00:00');
+  d.setDate(d.getDate()+dte);
+  sv(dateId, d.toISOString().split('T')[0]);
+}
+
+function dateTodte(dateId, dteId, openDateId){
+  var expiry=gv(dateId);
+  var openDate=gv(openDateId);
+  if(!expiry||!openDate) return;
+  var exp=new Date(expiry+'T12:00:00');
+  var open=new Date(openDate+'T12:00:00');
+  var dte=Math.round((exp-open)/86400000);
+  if(dte>=0) sv(dteId, dte);
+}
+
 // ── Reopen trade (remove close details) ──────────────────────────────────
 function reopenTrade(id){
   if(!confirm('Reopen this trade? Close details will be cleared and it will return to Open Trades.')) return;
@@ -2223,6 +2257,10 @@ if(savedRole==='admin'||savedRole==='guest'){
 var today=new Date().toISOString().split('T')[0]; sv('f-open-date',today);
 var dte=nextFriday(today);
 sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);
+dteToDate('f-dte','f-expiry');
+dteToDate('ic-bc-dte','ic-bc-expiry');
+dteToDate('ic-bp-dte','ic-bp-expiry');
+dteToDate('dir-dte','dir-expiry');
 onDirChange();
 </script>
 </body>

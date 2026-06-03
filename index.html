@@ -1575,12 +1575,19 @@ function confirmEdit(){
   if(isD) trades[idx].debit  = gv('em-credit');
   else     trades[idx].credit = gv('em-credit');
   trades[idx].ordered  = gv('em-ordered');
-  trades[idx].filled   = gv('em-filled');
+  var newFilled = parseInt(gv('em-filled'))||1;
+  trades[idx].filled   = newFilled;
   trades[idx].target   = gv('em-target');
   trades[idx].comments = gv('em-comments');
+  // Recalculate received based on new filled qty
+  var credit = parseFloat(trades[idx].credit||trades[idx].debit||'0')||0;
+  if(credit>0){
+    var rcv = (credit * newFilled * 100).toFixed(2);
+    trades[idx].received = trades[idx].isDir ? '-$'+rcv : '$'+rcv;
+  }
   upsertTrade(trades[idx]);
   eid('edit-modal').classList.remove('open');
-  renderPending();
+  renderPending(); renderOpen();
 }
 
 // ── Partial Close ────────────────────────────────────────────────────────

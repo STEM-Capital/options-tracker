@@ -700,7 +700,12 @@ function tradeToDb(t){
     e2price:t.e2price||'',e2qty:String(t.e2qty||''),e2comm:t.e2comm||'',
     close_date:t.closeDate||'',days_open:String(t.daysOpen||''),exit_reason:t.exitReason||'',
     pnl:t.pnl||'',rpnl:t.rpnl||'',wl:t.wl||'',comments:t.comments||'',
-    is_dir:!!t.isDir,pending:!!t.pending,cancelled:!!t.cancelled};
+    is_dir:!!t.isDir,pending:!!t.pending,cancelled:!!t.cancelled,
+    bc_closed:!!t.bcClosed,bp_closed:!!t.bpClosed,
+    bc_close_price:t.bcClosePrice||'',bc_close_comm:t.bcCloseComm||'',
+    bc_close_pnl:t.bcClosePnl||'',bc_close_date:t.bcCloseDate||'',
+    bp_close_price:t.bpClosePrice||'',bp_close_comm:t.bpCloseComm||'',
+    bp_close_pnl:t.bpClosePnl||'',bp_close_date:t.bpCloseDate||''};
 }
 function dbToTrade(r){
   return {id:r.id,ticker:r.ticker,openDate:r.open_date,setup:r.setup,dir:r.dir,
@@ -710,7 +715,12 @@ function dbToTrade(r){
     target:r.target,e1price:r.e1price,e1qty:r.e1qty,e1comm:r.e1comm,
     e2price:r.e2price,e2qty:r.e2qty,e2comm:r.e2comm,closeDate:r.close_date,daysOpen:r.days_open,
     exitReason:r.exit_reason,pnl:r.pnl,rpnl:r.rpnl,wl:r.wl,comments:r.comments,
-    isDir:r.is_dir,pending:r.pending,cancelled:r.cancelled};
+    isDir:r.is_dir,pending:r.pending,cancelled:r.cancelled,
+    bcClosed:r.bc_closed,bpClosed:r.bp_closed,
+    bcClosePrice:r.bc_close_price,bcCloseComm:r.bc_close_comm,
+    bcClosePnl:r.bc_close_pnl,bcCloseDate:r.bc_close_date,
+    bpClosePrice:r.bp_close_price,bpCloseComm:r.bp_close_comm,
+    bpClosePnl:r.bp_close_pnl,bpCloseDate:r.bp_close_date};
 }
 async function upsertTrade(t){
   var res=await sb.from('trades').upsert(tradeToDb(t),{onConflict:'id'});
@@ -756,6 +766,7 @@ function isIC(){ return getDir()==='Iron Condor'; }
 function isDir(){ var d=getDir(); return d==='Long Call'||d==='Long Put'; }
 function isSpread(){ return !isIC()&&!isDir(); }
 function isOpen(t){ return !t.pending && !t.cancelled && (!t.closeDate||!t.exitReason); }
+function isICLegClosed(t,side){ return side==='bc'?!!t.bcClosed:!!t.bpClosed; }
 function isPending(t){ return !!t.pending; }
 function rpnlNum(t){
   var s=(t.rpnl||'').trim(); if(!s) return 0;
@@ -1148,37 +1159,78 @@ function confirmClose(){
   if(closingId===null) return;
   var cidx=trades.findIndex(function(x){ return x.id===closingId; }); if(cidx<0) return;
   var t=trades[cidx], ic=t.dir==='Iron Condor';
-  trades[cidx].closeDate=gv('m-cd'); trades[cidx].daysOpen=gv('m-do');
-  trades[cidx].exitReason=gv('m-er'); trades[cidx].comments=gv('m-comments');
   var side=eid('close-modal').getAttribute('data-side')||'full';
-  if(ic){
-    if(side==='full'||!side){
+  trades[cidx].comments=gv('m-comments');
+
+  if(ic && (side==='bc'||side==='bp')){
+    // ── Single leg close — trade stays OPEN ──────────────────────────────
+    var legPnl=parseFloat(gv('m-ic-pnl-side').replace(/[^0-9.-]/g,'')||'0')||0;
+    var legRpnl=parseFloat(gv('m-ic-rpnl-side').replace(/[^0-9.-]/g,'')||'0')||0;
+    if(side==='bc'){
+      trades[cidx].bcClosePrice=gv('m-bc-exit');
+      trades[cidx].bcCloseComm=gv('m-bc-comm');
+      trades[cidx].bcClosePnl='$'+legPnl.toFixed(2);
+      trades[cidx].bcCloseDate=gv('m-cd');
+      trades[cidx].bcClosed=true;
+    } else {
+      trades[cidx].bpClosePrice=gv('m-bp-exit');
+      trades[cidx].bpCloseComm=gv('m-bp-comm');
+      trades[cidx].bpClosePnl='$'+legPnl.toFixed(2);
+      trades[cidx].bpCloseDate=gv('m-cd');
+      trades[cidx].bpClosed=true;
+    }
+    // Check if BOTH legs are now closed — if so, fully close the trade
+    if(trades[cidx].bcClosed && trades[cidx].bpClosed){
+      var bcPnl=parseFloat((trades[cidx].bcClosePnl||'$0').replace(/[^0-9.-]/g,''))||0;
+      var bpPnl=parseFloat((trades[cidx].bpClosePnl||'$0').replace(/[^0-9.-]/g,''))||0;
+      var totalPnl=bcPnl+bpPnl;
+      var bcComm=parseFloat(trades[cidx].bcCloseComm||'0')||0;
+      var bpComm=parseFloat(trades[cidx].bpCloseComm||'0')||0;
+      var oc=parseFloat(t.openComm||'0')||0;
+      var totalRpnl=totalPnl-bcComm-bpComm-oc;
+      trades[cidx].closeDate=gv('m-cd');
+      trades[cidx].daysOpen=gv('m-do');
+      trades[cidx].exitReason=gv('m-er');
+      trades[cidx].pnl='$'+totalPnl.toFixed(2);
+      trades[cidx].rpnl='$'+totalRpnl.toFixed(2);
+      trades[cidx].wl=totalRpnl>0?'Win':totalRpnl<0?'Loss':'';
+      trades[cidx].comments=(trades[cidx].comments?trades[cidx].comments+' | ':'')
+        +'BC closed '+formatDate(trades[cidx].bcCloseDate)+'@'+trades[cidx].bcClosePrice+'¢'
+        +' | BP closed '+formatDate(trades[cidx].bpCloseDate)+'@'+trades[cidx].bpClosePrice+'¢';
+      upsertTrade(trades[cidx]);
+      eid('close-modal').classList.remove('open');
+      closingId=null; renderOpen(); renderClosed(); showTab('closed');
+    } else {
+      // One leg closed, stay open
+      upsertTrade(trades[cidx]);
+      eid('close-modal').classList.remove('open');
+      closingId=null; renderOpen();
+    }
+  } else {
+    // ── Full position close (IC full, spread, or directional) ────────────
+    trades[cidx].closeDate=gv('m-cd'); trades[cidx].daysOpen=gv('m-do');
+    trades[cidx].exitReason=gv('m-er');
+    if(ic){
       trades[cidx].e1price=gv('m-full-exit'); trades[cidx].e1comm=gv('m-full-comm');
       trades[cidx].pnl=gv('m-ic-pnl'); trades[cidx].rpnl=gv('m-ic-rpnl'); trades[cidx].wl=gv('m-ic-wl');
     } else {
-      trades[cidx].e1price=side==='bc'?gv('m-bc-exit'):gv('m-bp-exit');
-      trades[cidx].e1comm=side==='bc'?gv('m-bc-comm'):gv('m-bp-comm');
-      trades[cidx].pnl=gv('m-ic-pnl-side'); trades[cidx].rpnl=gv('m-ic-rpnl-side');
-      var rpnlVal=parseFloat(gv('m-ic-rpnl-side').replace(/[^0-9.-]/g,''))||0;
-      trades[cidx].wl=rpnlVal>0?'Win':rpnlVal<0?'Loss':'';
+      trades[cidx].e1price=gv('m-e1p'); trades[cidx].e1qty=gv('m-e1q'); trades[cidx].e1comm=gv('m-e1c');
+      trades[cidx].e2price=gv('m-e2p'); trades[cidx].e2qty=gv('m-e2q'); trades[cidx].e2comm=gv('m-e2c');
+      trades[cidx].pnl=gv('m-pnl'); trades[cidx].rpnl=gv('m-rpnl'); trades[cidx].wl=gv('m-wl');
     }
-  } else {
-    trades[cidx].e1price=gv('m-e1p'); trades[cidx].e1qty=gv('m-e1q'); trades[cidx].e1comm=gv('m-e1c');
-    trades[cidx].e2price=gv('m-e2p'); trades[cidx].e2qty=gv('m-e2q'); trades[cidx].e2comm=gv('m-e2c');
-    trades[cidx].pnl=gv('m-pnl'); trades[cidx].rpnl=gv('m-rpnl'); trades[cidx].wl=gv('m-wl');
+    // Add partials P&L if any
+    if(trades[cidx].partials&&trades[cidx].partials.length>0){
+      var partialPnl=trades[cidx].partials.reduce(function(a,p){return a+parseFloat(p.pnl||0);},0);
+      var thisPnl=parseFloat((trades[cidx].pnl||'$0').replace(/[^0-9.-]/g,''))||0;
+      var totalPnl=partialPnl+thisPnl;
+      trades[cidx].pnl='$'+totalPnl.toFixed(2);
+      trades[cidx].rpnl='$'+totalPnl.toFixed(2);
+      trades[cidx].wl=totalPnl>0?'Win':totalPnl<0?'Loss':'';
+      trades[cidx].comments=(trades[cidx].comments?trades[cidx].comments+' | ':'')+'Partials: '+trades[cidx].partials.map(function(p){return p.qty+'@'+p.price+'¢';}).join(', ');
+    }
+    upsertTrade(trades[cidx]); eid('close-modal').classList.remove('open');
+    closingId=null; renderOpen(); renderClosed(); showTab('closed');
   }
-  // If there were partials, add their P&L to the final total
-  if(trades[cidx].partials&&trades[cidx].partials.length>0){
-    var partialPnl=trades[cidx].partials.reduce(function(a,p){return a+parseFloat(p.pnl||0);},0);
-    var thisPnl=parseFloat((trades[cidx].pnl||'$0').replace(/[^0-9.-]/g,''))||0;
-    var totalPnl=partialPnl+thisPnl;
-    trades[cidx].pnl='$'+totalPnl.toFixed(2);
-    trades[cidx].rpnl='$'+totalPnl.toFixed(2);
-    trades[cidx].wl=totalPnl>0?'Win':totalPnl<0?'Loss':'';
-    trades[cidx].comments=(trades[cidx].comments?trades[cidx].comments+' | ':'')+'Partials: '+trades[cidx].partials.map(function(p){return p.qty+'@'+p.price+'¢';}).join(', ');
-  }
-  upsertTrade(trades[cidx]); eid('close-modal').classList.remove('open');
-  closingId=null; renderOpen(); renderClosed(); showTab('closed');
 }
 
 // ── Render tables ─────────────────────────────────────────────────────────
@@ -1197,7 +1249,11 @@ function renderOpen(){
     var ow='—';
     if(!t.isDir&&t.short&&t.long){var os1=String(t.short).split('/')[0].trim(),ol1=String(t.long).split('/')[0].trim(),ow2=Math.abs(parseFloat(os1)-parseFloat(ol1));if(!isNaN(ow2)&&ow2>0)ow=ow2;}
     [['<strong>'+t.ticker+'</strong>'],
-     [formatDate(t.openDate)],[(t.setup||'—')],[dirBadge(t.dir)],
+     [formatDate(t.openDate)],[(t.setup||'—')],
+     [t.dir==='Iron Condor'?
+       (t.bcClosed&&!t.bpClosed?'<span class="bdg bIC">IC — BP open</span>':
+        !t.bcClosed&&t.bpClosed?'<span class="bdg bIC">IC — BC open</span>':
+        dirBadge(t.dir)):dirBadge(t.dir)],
      ['<span style="font-size:11px">'+(t.short||'')+'</span>'],
      ['<span style="font-size:11px">'+ow+'</span>'],
      [t.dte||''],

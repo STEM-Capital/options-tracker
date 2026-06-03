@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEM Capital - Credit Spreads Matrix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a1428 0%, #1a2332 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            height: 60px;
+            width: auto;
+        }
+
+        .header-text h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .header-text p {
+            color: #94a3b8;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin: 4px 0 0 0;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        select, input {
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 13px;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        .filter-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .filter-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+        }
+
+        .bid-color { background: #f87171; }
+        .mid-color { background: #60a5fa; }
+        .ask-color { background: #34d399; }
+
+        .spreads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        .spread-panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title i {
+            color: #60a5fa;
+            font-size: 16px;
+        }
+
+        .width-display {
+            font-size: 12px;
+            color: #94a3b8;
+            background: #0f172a;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .spreads {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .spread-item {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 14px;
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 15px;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .spread-item:hover {
+            border-color: #60a5fa;
+            background: #334155;
+        }
+
+        .spread-strikes {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+
+        .spread-prices {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .price {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .price-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .price-value {
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .price.bid .price-value { color: #f87171; }
+        .price.mid .price-value { color: #60a5fa; }
+        .price.ask .price-value { color: #34d399; }
+
+        .empty-message {
+            text-align: center;
+            color: #94a3b8;
+            padding: 30px 20px;
+            font-size: 13px;
+        }
+
+        .expiry-note {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCABQAFADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWm5ydn5KjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWm5ydn5KjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/2Q==" alt="STEM Capital Logo" class="logo">
+                <div class="header-text">
+                    <h1>STEM Capital Credit Spreads Matrix</h1>
+                    <p>INDEX SPREADS | DISCIPLINED GROWTH</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label class="control-label">Underlying</label>
+                <select id="instrumentSelect">
+                    <option value="SPX">SPX (S&P 500 Index)</option>
+                    <option value="SPY">SPY (SPDR S&P 500 ETF)</option>
+                    <option value="ES">ES (E-mini S&P 500)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Expiration Date</label>
+                <select id="expirySelect"></select>
+                <div class="expiry-note" id="expiryNote"></div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Current Price</label>
+                <input type="text" id="currentPrice" readonly>
+            </div>
+
+
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color bid-color"></div>
+                <span>Bid (You receive)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color mid-color"></div>
+                <span>Mid (Fair value)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color ask-color"></div>
+                <span>Ask (You pay)</span>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">Mid-Price Range Filter</div>
+            <div class="filter-grid">
+                <div class="control-group">
+                    <label class="control-label">Mid Price Range</label>
+                    <select id="midPriceRange">
+                        <option value="0.15-0.30">$0.15 - $0.30</option>
+                        <option value="0.25-0.45">$0.25 - $0.45</option>
+                        <option value="0.35-0.55">$0.35 - $0.55</option>
+                        <option value="0.40-0.80" selected>$0.40 - $0.80</option>
+                        <option value="0.45-0.75">$0.45 - $0.75</option>
+                        <option value="0.50-0.85">$0.50 - $0.85</option>
+                        <option value="0.60-1.00">$0.60 - $1.00</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="control-group" id="customMidGroup" style="display: none;">
+                    <label class="control-label">Min Price</label>
+                    <input type="number" id="customMidMin" placeholder="0.40" step="0.05" min="0.05">
+                </div>
+                <div class="control-group" id="customMaxGroup" style="display: none;">
+                    <label class="control-label">Max Price</label>
+                    <input type="number" id="customMidMax" placeholder="0.80" step="0.05" min="0.05">
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-title">Spread Width</div>
+            <div class="control-group">
+                <label class="control-label">Select or Enter Width</label>
+                <select id="spreadWidth">
+                    <option value="5">5pt</option>
+                    <option value="10" selected>10pt</option>
+                    <option value="15">15pt</option>
+                    <option value="20">20pt</option>
+                    <option value="25">25pt</option>
+                    <option value="custom">Custom Width</option>
+                </select>
+                <input type="number" id="customWidthInput" placeholder="Enter width" min="1" step="1" style="display: none; margin-top: 10px;">
+            </div>
+        </div>
+
+        <div class="spreads-grid" id="spreadsGrid"></div>
+    </div>
+
+    <script>
+        const mockIBKRData = {
+            SPX: { price: 7000, iv: 0.156 },
+            SPY: { price: 543.21, iv: 0.142 },
+            ES: { price: 5421.75, iv: 0.148 }
+        };
+
+        class OptionsChain {
+            constructor(underlying, price, iv) {
+                this.underlying = underlying;
+                this.price = price;
+                this.iv = iv;
+            }
+
+            generateChain() {
+                const strikes = [];
+                const step = this.underlying === 'SPX' ? 5 : (this.underlying === 'SPY' ? 1 : 5);
+                const baseStrike = Math.round(this.price / step) * step;
+                
+                for (let i = -10; i <= 10; i++) {
+                    strikes.push(baseStrike + (i * step));
+                }
+
+                return strikes.map(strike => this.generateOption(strike));
+            }
+
+            generateOption(strike) {
+                const moneyness = strike / this.price;
+                const callDelta = this.blackScholesApprox(moneyness, true);
+                const putDelta = callDelta - 1;
+
+                const otmFactor = Math.abs(moneyness - 1);
+                const baseSpread = 0.05 * (1 + otmFactor * 2);
+
+                const callMid = Math.max(0.01, (this.price - strike) * 0.015 + Math.random() * 0.3);
+                const putMid = Math.max(0.01, (strike - this.price) * 0.015 + Math.random() * 0.3);
+
+                return {
+                    strike: parseFloat(strike.toFixed(2)),
+                    call: {
+                        bid: parseFloat((callMid - baseSpread / 2).toFixed(2)),
+                        ask: parseFloat((callMid + baseSpread / 2).toFixed(2)),
+                        mid: parseFloat(callMid.toFixed(2)),
+                        delta: parseFloat((callDelta * 100).toFixed(1))
+                    },
+                    put: {
+                        bid: parseFloat((putMid - baseSpread / 2).toFixed(2)),
+                        ask: parseFloat((putMid + baseSpread / 2).toFixed(2)),
+                        mid: parseFloat(putMid.toFixed(2)),
+                        delta: parseFloat((putDelta * 100).toFixed(1))
+                    }
+                };
+            }
+
+            blackScholesApprox(moneyness, isCall) {
+                if (isCall) {
+                    return 1 / (1 + Math.exp(-3 * (moneyness - 1)));
+                } else {
+                    return 1 / (1 + Math.exp(-3 * (moneyness - 1))) - 1;
+                }
+            }
+        }
+
+        const state = {
+            instrument: 'SPX',
+            expiryDate: null,
+            expiryType: null,
+            optionsChain: [],
+            spreadWidth: 10,
+            midPriceMin: 0.40,
+            midPriceMax: 0.80
+        };
+
+        const instrumentSelect = document.getElementById('instrumentSelect');
+        const expirySelect = document.getElementById('expirySelect');
+        const expiryNote = document.getElementById('expiryNote');
+        const currentPriceInput = document.getElementById('currentPrice');
+        const spreadsGrid = document.getElementById('spreadsGrid');
+        const midPriceRange = document.getElementById('midPriceRange');
+        const customMidGroup = document.getElementById('customMidGroup');
+        const customMaxGroup = document.getElementById('customMaxGroup');
+        const customMidMin = document.getElementById('customMidMin');
+        const customMidMax = document.getElementById('customMidMax');
+        const spreadWidth = document.getElementById('spreadWidth');
+        const customWidthInput = document.getElementById('customWidthInput');
+
+        function getThirdFridayOfMonth(year, month) {
+            let date = new Date(year, month, 1);
+            let fridays = 0;
+            
+            while (fridays < 3) {
+                if (date.getDay() === 5) {
+                    fridays++;
+                }
+                if (fridays < 3) {
+                    date.setDate(date.getDate() + 1);
+                }
+            }
+            
+            return date;
+        }
+
+        function generateExpiryDates() {
+            const today = new Date();
+            const dates = [];
+            const monthlyExpirations = new Set();
+            
+            for (let i = 0; i < 3; i++) {
+                const monthDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
+                const thirdFriday = getThirdFridayOfMonth(monthDate.getFullYear(), monthDate.getMonth());
+                if (thirdFriday >= today) {
+                    monthlyExpirations.add(thirdFriday.toDateString());
+                }
+            }
+            
+            for (let dte = 0; dte <= 45; dte++) {
+                const expDate = new Date(today);
+                expDate.setDate(expDate.getDate() + dte);
+                
+                const dateStr = expDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+                const isFriday = expDate.getDay() === 5;
+                const isMonthly = monthlyExpirations.has(expDate.toDateString());
+                
+                let expiryType = 'Standard';
+                
+                if (state.instrument === 'SPX') {
+                    if (isFriday && isMonthly) {
+                        expiryType = 'SPX (3rd Friday)';
+                    } else if (isFriday) {
+                        expiryType = 'SPXW (Weekly EOD)';
+                    }
+                } else {
+                    if (isFriday) {
+                        expiryType = 'Weekly (Friday)';
+                    }
+                }
+                
+                dates.push({ dte, dateStr, expiryType, isFriday, isMonthly });
+            }
+            
+            return dates;
+        }
+
+        function populateExpiryDates() {
+            const dates = generateExpiryDates();
+            expirySelect.innerHTML = dates.map(d => 
+                `<option value="${d.dte}" data-type="${d.expiryType}">${d.dte} DTE - ${d.dateStr} - ${d.expiryType}</option>`
+            ).join('');
+            
+            const defaultIdx = dates.findIndex(d => d.dte === 7);
+            expirySelect.selectedIndex = defaultIdx >= 0 ? defaultIdx : 0;
+            updateExpiryNote();
+        }
+
+        function updateExpiryNote() {
+            const dates = generateExpiryDates();
+            const selectedIdx = expirySelect.selectedIndex;
+            const selected = dates[selectedIdx];
+            
+            if (selected) {
+                state.expiryDate = selected.dateStr;
+                state.expiryType = selected.expiryType;
+                
+                let note = `${selected.expiryType}`;
+                if (selected.isFriday && state.instrument === 'SPX') {
+                    if (selected.isMonthly) {
+                        note += ' - 4:00 PM ET close';
+                    } else {
+                        note += ' - 4:15 PM ET close';
+                    }
+                }
+                expiryNote.innerHTML = note;
+            }
+        }
+
+
+
+        instrumentSelect.addEventListener('change', (e) => {
+            state.instrument = e.target.value;
+            populateExpiryDates();
+            loadData();
+            // Update current price when instrument changes
+            const data = mockIBKRData[state.instrument];
+            currentPriceInput.value = data.price.toFixed(state.instrument === 'SPX' ? 0 : 2);
+        });
+
+        expirySelect.addEventListener('change', updateExpiryNote);
+
+        midPriceRange.addEventListener('change', (e) => {
+            if (e.target.value === 'custom') {
+                customMidGroup.style.display = 'flex';
+                customMaxGroup.style.display = 'flex';
+                customMidMin.value = state.midPriceMin;
+                customMidMax.value = state.midPriceMax;
+            } else {
+                customMidGroup.style.display = 'none';
+                customMaxGroup.style.display = 'none';
+                const [min, max] = e.target.value.split('-').map(parseFloat);
+                state.midPriceMin = min;
+                state.midPriceMax = max;
+                renderSpreads();
+            }
+        });
+
+        customMidMin.addEventListener('change', () => {
+            state.midPriceMin = parseFloat(customMidMin.value) || 0.40;
+            renderSpreads();
+        });
+
+        customMidMax.addEventListener('change', () => {
+            state.midPriceMax = parseFloat(customMidMax.value) || 0.80;
+            renderSpreads();
+        });
+
+        spreadWidth.addEventListener('change', (e) => {
+            if (e.target.value === 'custom') {
+                customWidthInput.style.display = 'block';
+                customWidthInput.focus();
+            } else {
+                customWidthInput.style.display = 'none';
+                state.spreadWidth = parseInt(e.target.value);
+                renderSpreads();
+            }
+        });
+
+        customWidthInput.addEventListener('change', () => {
+            const width = parseInt(customWidthInput.value);
+            if (width && width > 0) {
+                state.spreadWidth = width;
+                renderSpreads();
+            }
+        });
+
+        function loadData() {
+            const data = mockIBKRData[state.instrument];
+            // Only set current price if empty (on initial load)
+            if (!currentPriceInput.value) {
+                currentPriceInput.value = data.price.toFixed(state.instrument === 'SPX' ? 0 : 2);
+            }
+
+            const chain = new OptionsChain(state.instrument, data.price, data.iv);
+            state.optionsChain = chain.generateChain().sort((a, b) => a.strike - b.strike);
+            
+            renderSpreads();
+        }
+
+        function getSpreadsForWidth(type, width) {
+            const spreads = [];
+            const sorted = type === 'call' ? 
+                state.optionsChain.sort((a, b) => a.strike - b.strike) :
+                state.optionsChain.sort((a, b) => b.strike - a.strike);
+            
+            for (let i = 0; i < sorted.length; i++) {
+                const short = sorted[i];
+                const long = sorted.find(o => Math.abs(
+                    type === 'call' ? 
+                    o.strike - short.strike - width :
+                    short.strike - o.strike - width
+                ) < 0.5);
+                
+                if (long) {
+                    const shortOpt = type === 'call' ? short.call : short.put;
+                    const longOpt = type === 'call' ? long.call : long.put;
+                    
+                    const bid = Math.max(0.01, shortOpt.bid - longOpt.ask);
+                    const mid = Math.max(0.01, shortOpt.mid - longOpt.mid);
+                    const ask = Math.max(0.01, shortOpt.ask - longOpt.bid);
+                    
+                    if (mid >= state.midPriceMin && mid <= state.midPriceMax) {
+                        spreads.push({
+                            shortStrike: short.strike,
+                            longStrike: long.strike,
+                            bid, mid, ask
+                        });
+                    }
+                }
+            }
+            
+            return spreads.slice(0, 6);
+        }
+
+        function renderSpreads() {
+            let html = '';
+
+            // Calls
+            html += renderPanel('Calls', 'arrow-up', 'call');
+            
+            // Puts
+            html += renderPanel('Puts', 'arrow-down', 'put');
+
+            spreadsGrid.innerHTML = html;
+        }
+
+        function renderPanel(title, icon, type) {
+            let html = `
+                <div class="spread-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-${icon}"></i> ${title}
+                        </div>
+                    </div>
+                    <div class="spreads">
+            `;
+
+            const spreads = getSpreadsForWidth(type, state.spreadWidth);
+            
+            if (spreads.length === 0) {
+                html += `<div class="empty-message">${state.spreadWidth}pt: No spreads in range</div>`;
+            } else {
+                html += `<div style="margin-bottom: 12px;"><div class="width-display">${state.spreadWidth}-Point Spreads</div></div>`;
+                for (const spread of spreads) {
+                    html += `
+                        <div class="spread-item">
+                            <div class="spread-strikes">${spread.shortStrike}/${spread.longStrike}</div>
+                            <div class="spread-prices">
+                                <div class="price bid">
+                                    <div class="price-label">Bid</div>
+                                    <div class="price-value">$${spread.bid.toFixed(2)}</div>
+                                </div>
+                                <div class="price mid">
+                                    <div class="price-label">Mid</div>
+                                    <div class="price-value">$${spread.mid.toFixed(2)}</div>
+                                </div>
+                                <div class="price ask">
+                                    <div class="price-label">Ask</div>
+                                    <div class="price-value">$${spread.ask.toFixed(2)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+            return html;
+        }
+
+        // Initialize
+        populateExpiryDates();
+        loadData();
+    </script>
+</body>
+</html>

@@ -140,7 +140,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
       <div class="fg">
         <div class="fgrp"><span class="lbl">Entry credit ($)</span><input id="cm-entry-credit" readonly style="background:#f0f8e8;color:#2d6e0f;font-weight:600"></div>
         <div class="fgrp"><span class="lbl">Exit price (¢)</span><input id="m-e1p" type="number" step="0.01"></div>
-        <div class="fgrp"><span class="lbl">Qty</span><input id="m-e1q" type="number" min="0" value="0"></div>
+        <div class="fgrp"><span class="lbl">Qty</span><input id="m-e1q" type="number" min="0" value="0" oninput="autoFillE2Qty()"></div>
         <div class="fgrp"><span class="lbl">Commission ($)</span><input id="m-e1c" type="number" step="0.01" value="0"></div>
       </div>
       <div class="fg">
@@ -469,6 +469,42 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
     <div style="display:flex;gap:8px">
       <button class="btn btn-g" id="btn-confirm-edit">Save changes</button>
       <button class="btn" id="btn-cancel-edit">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CLOSED TRADE MODAL -->
+<div id="edit-closed-modal" class="modal-overlay" onclick="if(event.target===this){this.classList.remove('open');editClosedId=null;}">
+  <div class="modal-box">
+    <div class="modal-title">Edit closed trade — <span id="ecm-ticker"></span></div>
+    <p style="font-size:12px;color:#777;margin-bottom:14px">Adjust exit details. Changes are saved immediately to Supabase.</p>
+    <div class="fg">
+      <div class="fgrp"><span class="lbl">Exit 1 price (¢)</span><input id="ecm-e1p" type="number" step="0.01"></div>
+      <div class="fgrp"><span class="lbl">Qty</span><input id="ecm-e1q" type="number" min="0"></div>
+      <div class="fgrp"><span class="lbl">Commission ($)</span><input id="ecm-e1c" type="number" step="0.01"></div>
+    </div>
+    <div class="fg">
+      <div class="fgrp"><span class="lbl">Exit 2 price (¢) opt.</span><input id="ecm-e2p" type="number" step="0.01"></div>
+      <div class="fgrp"><span class="lbl">Qty</span><input id="ecm-e2q" type="number" min="0"></div>
+      <div class="fgrp"><span class="lbl">Commission ($)</span><input id="ecm-e2c" type="number" step="0.01"></div>
+    </div>
+    <div class="fg">
+      <div class="fgrp"><span class="lbl">Close date</span><input id="ecm-cd" type="date"></div>
+      <div class="fgrp"><span class="lbl">Days open</span><input id="ecm-do" type="number"></div>
+      <div class="fgrp"><span class="lbl">Exit reason</span><select id="ecm-er">
+        <option>Target Hit</option><option>Stop Hit</option><option>Exp. Worthless</option>
+        <option>Rolled</option><option>Assigned</option><option>Closed</option><option>Partial Close</option>
+      </select></div>
+    </div>
+    <div class="fg">
+      <div class="fgrp"><span class="lbl">P&L ($)</span><input id="ecm-pnl"></div>
+      <div class="fgrp"><span class="lbl">Realized P&L ($)</span><input id="ecm-rpnl"></div>
+      <div class="fgrp"><span class="lbl">W/L</span><select id="ecm-wl"><option value="">—</option><option>Win</option><option>Loss</option></select></div>
+    </div>
+    <div class="fgrp" style="margin-bottom:16px"><span class="lbl">Comments</span><textarea id="ecm-comments" placeholder="Notes…"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" onclick="confirmEditClosed()">Save changes</button>
+      <button class="btn" onclick="document.getElementById('edit-closed-modal').classList.remove('open'); editClosedId=null;">Cancel</button>
     </div>
   </div>
 </div>
@@ -1213,7 +1249,20 @@ function renderClosed(){
      ['<span style="font-size:11px">'+(t.exitReason||'')+'</span>'],
      ['<span style="font-size:11px;color:#999">'+(t.comments||'').slice(0,28)+'</span>']
     ].forEach(function(h){ row.insertCell().innerHTML=h[0]; });
-    var ac=row.insertCell(); ac.appendChild(makeDeleteBtn(t.id));
+    var ac=row.insertCell();
+    var wr=document.createElement('div');
+    wr.style.cssText='display:flex;gap:5px;align-items:center;flex-wrap:wrap';
+    // Edit button
+    var eb=document.createElement('button');
+    eb.className='btn btn-b'; eb.style.cssText='padding:4px 10px;font-size:12px';
+    eb.textContent='Edit';
+    eb.addEventListener('click',(function(tid){ return function(){ openEditClosedModal(tid); }; })(t.id));
+    // Delete → reopen
+    var db=document.createElement('button');
+    db.className='btn btn-r'; db.style.cssText='padding:4px 10px;font-size:12px';
+    db.textContent='Reopen';
+    db.addEventListener('click',(function(tid){ return function(){ reopenTrade(tid); }; })(t.id));
+    wr.appendChild(eb); wr.appendChild(db); ac.appendChild(wr);
   });
 }
 
@@ -1600,6 +1649,58 @@ function confirmPartial(){
   partialId=null; partialSide=null;
   renderOpen(); renderClosed();
   if(newClosed>=filled) showTab('closed');
+}
+
+// ── Auto-fill Exit 2 qty from remaining ──────────────────────────────────
+function autoFillE2Qty(){
+  var e1q=parseInt(gv('m-e1q'))||0;
+  var remaining=parseInt(eid('close-modal').getAttribute('data-remaining'))||0;
+  if(remaining>0 && e1q>=0 && e1q<=remaining){
+    sv('m-e2q', Math.max(0, remaining-e1q));
+  }
+  mCalc();
+}
+
+// ── Reopen trade (remove close details) ──────────────────────────────────
+function reopenTrade(id){
+  if(!confirm('Reopen this trade? Close details will be cleared and it will return to Open Trades.')) return;
+  var idx=trades.findIndex(function(x){ return x.id===id; }); if(idx<0) return;
+  trades[idx].closeDate=''; trades[idx].daysOpen=''; trades[idx].exitReason='';
+  trades[idx].pnl=''; trades[idx].rpnl=''; trades[idx].wl='';
+  trades[idx].e1price=''; trades[idx].e1qty=''; trades[idx].e1comm='';
+  trades[idx].e2price=''; trades[idx].e2qty=''; trades[idx].e2comm='';
+  upsertTrade(trades[idx]);
+  renderClosed(); renderOpen(); showTab('open');
+}
+
+// ── Edit closed trade modal ───────────────────────────────────────────────
+var editClosedId=null;
+
+function openEditClosedModal(id){
+  var t=trades.find(function(x){ return x.id===id; }); if(!t) return;
+  editClosedId=id;
+  document.getElementById('ecm-ticker').textContent=t.ticker+' — '+t.dir+' ('+formatDate(t.openDate)+')';
+  sv('ecm-e1p', t.e1price||''); sv('ecm-e1q', t.e1qty||''); sv('ecm-e1c', t.e1comm||'0');
+  sv('ecm-e2p', t.e2price||''); sv('ecm-e2q', t.e2qty||''); sv('ecm-e2c', t.e2comm||'0');
+  sv('ecm-cd', t.closeDate||''); sv('ecm-do', t.daysOpen||'');
+  sv('ecm-er', t.exitReason||'Closed');
+  sv('ecm-pnl', t.pnl||''); sv('ecm-rpnl', t.rpnl||''); sv('ecm-wl', t.wl||'');
+  sv('ecm-comments', t.comments||'');
+  document.getElementById('edit-closed-modal').classList.add('open');
+}
+
+function confirmEditClosed(){
+  if(!editClosedId) return;
+  var idx=trades.findIndex(function(x){ return x.id===editClosedId; }); if(idx<0) return;
+  trades[idx].e1price=gv('ecm-e1p'); trades[idx].e1qty=gv('ecm-e1q'); trades[idx].e1comm=gv('ecm-e1c');
+  trades[idx].e2price=gv('ecm-e2p'); trades[idx].e2qty=gv('ecm-e2q'); trades[idx].e2comm=gv('ecm-e2c');
+  trades[idx].closeDate=gv('ecm-cd'); trades[idx].daysOpen=gv('ecm-do');
+  trades[idx].exitReason=gv('ecm-er');
+  trades[idx].pnl=gv('ecm-pnl'); trades[idx].rpnl=gv('ecm-rpnl'); trades[idx].wl=gv('ecm-wl');
+  trades[idx].comments=gv('ecm-comments');
+  upsertTrade(trades[idx]);
+  document.getElementById('edit-closed-modal').classList.remove('open');
+  editClosedId=null; renderClosed(); renderDashboard();
 }
 
 function showTab(t){

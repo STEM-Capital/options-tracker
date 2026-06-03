@@ -808,10 +808,11 @@ function setDTEs(){
   var d=nextFriday(v);
   sv('f-dte',d); sv('ic-bc-dte',d); sv('ic-bp-dte',d); sv('dir-dte',d);
   // Also update expiry date fields
-  dteToDate('f-dte','f-expiry');
-  dteToDate('ic-bc-dte','ic-bc-expiry');
-  dteToDate('ic-bp-dte','ic-bp-expiry');
-  dteToDate('dir-dte','dir-expiry');
+  var openDate=gv('f-open-date');
+  dteToDate(d,'f-expiry',openDate);
+  dteToDate(d,'ic-bc-expiry',openDate);
+  dteToDate(d,'ic-bp-expiry',openDate);
+  dteToDate(d,'dir-expiry',openDate);
 }
 
 function onDirChange(){
@@ -984,10 +985,11 @@ function clearForm(){
   sv('f-open-date',today);
   var dte=nextFriday(today);
   sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);
-  dteToDate('f-dte','f-expiry');
-  dteToDate('ic-bc-dte','ic-bc-expiry');
-  dteToDate('ic-bp-dte','ic-bp-expiry');
-  dteToDate('dir-dte','dir-expiry');
+  var clearOpenDate=gv('f-open-date');
+  dteToDate(dte,'f-expiry',clearOpenDate);
+  dteToDate(dte,'ic-bc-expiry',clearOpenDate);
+  dteToDate(dte,'ic-bp-expiry',clearOpenDate);
+  dteToDate(dte,'dir-expiry',clearOpenDate);
   sv('f-delta','0.094');
   sv('f-credit','0.65');
   sv('ic-bc-delta','0.094');
@@ -1900,13 +1902,14 @@ function openEditOpenModal(id){
 }
 
 // ── DTE ↔ Expiry Date sync ───────────────────────────────────────────────
-function dteToDate(dteId, dateId){
-  var openDate=gv('f-open-date');
-  var dte=parseInt(gv(dteId));
+function dteToDate(dteId, dateId, openDateOverride){
+  var openDate=openDateOverride||gv('f-open-date');
+  var dte=parseInt(typeof dteId==='number'?dteId:gv(dteId));
   if(!openDate||isNaN(dte)||dte<0) return;
   var d=new Date(openDate+'T12:00:00');
   d.setDate(d.getDate()+dte);
-  sv(dateId, d.toISOString().split('T')[0]);
+  var el=document.getElementById(dateId);
+  if(el) el.value=d.toISOString().split('T')[0];
 }
 
 function dateTodte(dateId, dteId, openDateId){
@@ -2257,10 +2260,10 @@ if(savedRole==='admin'||savedRole==='guest'){
 var today=new Date().toISOString().split('T')[0]; sv('f-open-date',today);
 var dte=nextFriday(today);
 sv('f-dte',dte); sv('ic-bc-dte',dte); sv('ic-bp-dte',dte); sv('dir-dte',dte);
-dteToDate('f-dte','f-expiry');
-dteToDate('ic-bc-dte','ic-bc-expiry');
-dteToDate('ic-bp-dte','ic-bp-expiry');
-dteToDate('dir-dte','dir-expiry');
+dteToDate(dte,'f-expiry',today);
+dteToDate(dte,'ic-bc-expiry',today);
+dteToDate(dte,'ic-bp-expiry',today);
+dteToDate(dte,'dir-expiry',today);
 onDirChange();
 </script>
 </body>

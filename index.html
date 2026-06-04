@@ -1093,7 +1093,9 @@ function openCloseModal(id, side){
     if(bpLeg)   bpLeg.style.display=(side==='bp')?'block':'none';
     if(legSum)  legSum.style.display=(side==='bc'||side==='bp')?'block':'none';
     var icClosedQty=(t.partials||[]).reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
-    var icRemainQty=Math.max(1,(parseInt(t.filled)||0)-icClosedQty);
+    var filledVal=parseInt(t.filled)||0;
+    var icRemainQty=filledVal-icClosedQty;
+    console.log('IC Close - filled:',t.filled,'(type:',typeof t.filled+') closedQty:',icClosedQty,'remain:',icRemainQty);
     eid('close-modal').setAttribute('data-remaining', icRemainQty);
     // Populate remaining spreads fields
     sv('m-remaining-full', String(icRemainQty));
@@ -1117,13 +1119,17 @@ function openCloseModal(id, side){
     if(spPnl) spPnl.style.display='block';
     // Pre-fill qty with remaining contracts
     var closedQty=(t.partials||[]).reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
-    var remainQty=Math.max(1,(parseInt(t.filled)||0)-closedQty);
+    var filledVal=parseInt(t.filled)||0;
+    var remainQty=filledVal-closedQty;
+    if(remainQty<0) remainQty=0;
     var cmEntryCredit=document.getElementById('cm-entry-credit');
     if(cmEntryCredit){
       var ec=parseFloat(t.credit||t.debit||'0')||0;
       var ecLabel=document.querySelector('#cm-spread-section .lbl');
-      if(t.isDir&&ecLabel) ecLabel.textContent='Entry debit ($)';
-      else if(ecLabel) ecLabel.textContent='Entry credit ($)';
+      if(ecLabel){
+        if(t.isDir) ecLabel.textContent='Entry debit ($)';
+        else ecLabel.textContent='Entry credit ($)';
+      }
       cmEntryCredit.value='$'+ec.toFixed(2);
     }
     sv('m-e1p',''); sv('m-e1q',String(remainQty)); sv('m-e1c','0');
@@ -1303,11 +1309,11 @@ function renderOpen(){
       // One IC leg closed, other still open
       var openLeg=t.bcClosed?'BP (Put)':'BC (Call)';
       var closedLeg=t.bcClosed?'BC (Call)':'BP (Put)';
-      partialCell.innerHTML='<span style="background:#fff3cd;color:#856404;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600">'+closedLeg+' closed</span>';
-      remainCell.innerHTML='<span style="background:#d8f4eb;color:#0a5e3a;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600">'+filledQty+' '+openLeg+'</span>';
+      partialCell.innerHTML='<span style="background:#fff3cd;color:#856404;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+closedLeg+' leg has been closed">'+closedLeg+' closed</span>';
+      remainCell.innerHTML='<span style="background:#d8f4eb;color:#0a5e3a;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+filledQty+' '+openLeg+' spreads still open">'+filledQty+' '+openLeg+'</span>';
     } else if(partials.length>0){
-      partialCell.innerHTML='<span style="background:#fff3cd;color:#856404;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600">'+closedQty+' of '+filledQty+'</span>';
-      remainCell.innerHTML='<span style="background:#ddeeff;color:#0c4480;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600">'+remainQty+'</span>';
+      partialCell.innerHTML='<span style="background:#fff3cd;color:#856404;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+closedQty+' of '+filledQty+' spreads partially closed">'+closedQty+' of '+filledQty+'</span>';
+      remainCell.innerHTML='<span style="background:#ddeeff;color:#0c4480;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+remainQty+' spreads still open">'+remainQty+'</span>';
     } else {
       partialCell.innerHTML='<span style="color:#ccc;font-size:11px">—</span>';
       remainCell.innerHTML='<span style="color:#ccc;font-size:11px">—</span>';

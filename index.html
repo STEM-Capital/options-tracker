@@ -1497,7 +1497,14 @@ function renderDashboard(){
   var avgWin=wins.length?wins.reduce(function(a,t){ return a+rpnlNum(t); },0)/wins.length:0;
   var avgLoss=losses.length?losses.reduce(function(a,t){ return a+rpnlNum(t); },0)/losses.length:0;
   var allC=closed.reduce(function(a,t){
-    return a+(parseFloat(t.openComm)||0)+(parseFloat(t.e1comm)||0)+(parseFloat(t.e2comm)||0);
+    var openComm=parseFloat(t.openComm)||0;
+    var e1comm=parseFloat(t.e1comm)||0;
+    var e2comm=parseFloat(t.e2comm)||0;
+    var partialComms=0;
+    if(t.partials&&t.partials.length>0){
+      partialComms=t.partials.reduce(function(a,p){return a+parseFloat(p.comm||0);},0);
+    }
+    return a+(openComm+e1comm+e2comm+partialComms);
   },0);
   var maxW=wins.length?Math.max.apply(null,wins.map(rpnlNum)):0;
   var maxL=losses.length?Math.min.apply(null,losses.map(rpnlNum)):0;
@@ -1567,7 +1574,15 @@ function renderDashboard(){
     if(!segs[k]) segs[k]={trades:0,wins:0,rpnls:[],comms:0};
     segs[k].trades++; if(t.wl==='Win') segs[k].wins++;
     segs[k].rpnls.push(rpnlNum(t));
-    segs[k].comms+=(parseFloat(t.openComm)||0)+(parseFloat(t.e1comm)||0)+(parseFloat(t.e2comm)||0);
+    // Calculate total commissions: open comm + exit 1 comm + exit 2 comm + partial comms
+    var openComm=parseFloat(t.openComm)||0;
+    var e1comm=parseFloat(t.e1comm)||0;
+    var e2comm=parseFloat(t.e2comm)||0;
+    var partialComms=0;
+    if(t.partials&&t.partials.length>0){
+      partialComms=t.partials.reduce(function(a,p){return a+parseFloat(p.comm||0);},0);
+    }
+    segs[k].comms+=(openComm+e1comm+e2comm+partialComms);
   });
   // ── Unified trade history (closed + cancelled, chronological) ────────
   var allHistory=trades.filter(function(t){

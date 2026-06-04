@@ -127,7 +127,8 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
   <input type="file" id="import-file" accept=".json" style="display:none">
   <span class="backup-note" id="backup-status"></span>
   <button class="btn" id="btn-migrate" style="padding:5px 12px;font-size:12px;background:#7a4500;color:#fff;border-color:#7a4500;display:none" onclick="migrateLocalStorage()">⬆ Import old trades</button>
-  <button class="btn" style="margin-left:auto;padding:5px 14px;font-size:12px;font-weight:600;color:#A32D2D;border-color:#F0C0C0;background:#fff;flex-shrink:0" onclick="doLogout()">⎋ Sign out</button>
+  <button class="btn" style="margin-left:auto;padding:5px 14px;font-size:12px;font-weight:600;color:#666;border-color:#d0cdc6;background:#fff;flex-shrink:0;margin-right:8px" id="btn-settings" onclick="openSettings()">⚙ Settings</button>
+  <button class="btn" style="padding:5px 14px;font-size:12px;font-weight:600;color:#A32D2D;border-color:#F0C0C0;background:#fff;flex-shrink:0" onclick="doLogout()">⎋ Sign out</button>
 </div>
 
 <!-- Close trade modal -->
@@ -224,7 +225,48 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
   </div>
 </div>
 
-<!-- PARTIAL CLOSE MODAL -->
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" class="modal-overlay" onclick="if(event.target===this){this.classList.remove('open');}">
+  <div class="modal-box">
+    <div class="modal-title">Settings</div>
+    
+    <div class="fgrp" style="margin-bottom:16px">
+      <span class="lbl">Telus SMS Notifications</span>
+      <p style="font-size:12px;color:#666;margin-bottom:8px;margin-top:4px">Receive trade closure alerts via SMS to your cell phone.</p>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer">
+        <input type="checkbox" id="notify-enabled" style="width:auto;cursor:pointer">
+        <span style="font-size:13px">Enable notifications</span>
+      </label>
+    </div>
+    
+    <div class="fgrp" style="margin-bottom:16px">
+      <span class="lbl">Resend API Key</span>
+      <p style="font-size:12px;color:#666;margin-bottom:8px;margin-top:4px"><strong>Getting your API key:</strong></p>
+      <ol style="font-size:12px;color:#666;margin:0 0 8px 20px;padding:0">
+        <li>Go to <strong>resend.com</strong> and sign up (free)</li>
+        <li>Create a new project (optional)</li>
+        <li>Go to Settings → API Keys</li>
+        <li>Create new API key</li>
+        <li>Copy the key (starts with <code style="background:#f5f5f3;padding:2px 4px;border-radius:3px">re_</code>)</li>
+        <li>Paste it below</li>
+      </ol>
+      <input type="password" id="resend-key" placeholder="re_..." style="font-family:monospace">
+      <p style="font-size:11px;color:#999;margin-top:6px">🔒 Stored locally in your browser, never sent to server</p>
+      <p style="font-size:11px;color:#27500A;margin-top:4px"><strong>✓ What Resend provides:</strong> Email API that we use to send SMS via Telus gateway (100 emails/month free)</p>
+    </div>
+    
+    <div class="fgrp" style="margin-bottom:16px">
+      <span class="lbl">Phone Number</span>
+      <input type="text" id="sms-phone" placeholder="7808713792@msg.telus.com" readonly style="background:#f5f5f3;color:#888">
+      <p style="font-size:11px;color:#999;margin-top:6px">Telus SMS gateway (sends as email to SMS)</p>
+    </div>
+    
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" id="btn-save-settings">Save settings</button>
+      <button class="btn" onclick="eid('settings-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
 <div id="partial-modal" class="modal-overlay" onclick="if(event.target===this){this.classList.remove('open'); partialId=null; partialSide=null;}">
   <div class="modal-box">
     <div class="modal-title">Partial close — <span id="partial-modal-ticker"></span></div>
@@ -740,6 +782,77 @@ async function upsertTrade(t){
   if(res.error) console.error('Upsert:',res.error);
   localStorage.setItem('opt_cache',JSON.stringify(trades));
 }
+
+async function sendTradeCloseNotification(t){
+  if(!window.NOTIFY_ENABLED) return; // Notifications disabled
+  if(!t.closeDate||!t.rpnl||!t.wl) return; // Only send if trade is fully closed
+  if(!window.RESEND_KEY) { console.log('Resend API key not configured'); return; }
+  
+  var rpnl=parseFloat((t.rpnl||'$0').replace(/[^0-9.-]/g,''))||0;
+  var dir=t.dir||'Iron Condor';
+  var winLoss=t.wl||'';
+  var rpnlAbs=Math.abs(rpnl).toFixed(2);
+  
+  // Format message with predefined template
+  var msgBody;
+  if(winLoss==='Win'){
+    msgBody='Trade Close Notification\nStem Capital has closed a '+dir+' for a Win of $'+rpnlAbs+' after commissions';
+  } else {
+    msgBody='Trade Close Notification\nStem Capital has closed a '+dir+' for a Loss of $'+rpnlAbs+' after commissions';
+  }
+  
+  try{
+    var res=await fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+window.RESEND_KEY,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        from:'noreply@imocs-safety.com',
+        to:'7808713792@msg.telus.com',
+        subject:'Trade Close Notification',
+        html:'<p>'+msgBody.replace(/\n/g,'<br>')+'</p>'
+      })
+    });
+    if(res.ok) console.log('SMS sent to Telus');
+    else console.log('SMS send failed:',res.status);
+  }catch(e){
+    console.log('Notification error (not critical):',e.message);
+  }
+}
+
+// ── Settings Management ──────────────────────────────────────────────────────
+function loadSettings(){
+  var notifyEnabled=localStorage.getItem('notify_enabled')==='true';
+  var resendKey=localStorage.getItem('resend_key')||'';
+  
+  eid('notify-enabled').checked=notifyEnabled;
+  eid('resend-key').value=resendKey;
+  window.RESEND_KEY=resendKey;
+  window.NOTIFY_ENABLED=notifyEnabled;
+}
+
+function saveSettings(){
+  var notifyEnabled=eid('notify-enabled').checked;
+  var resendKey=eid('resend-key').value;
+  
+  localStorage.setItem('notify_enabled',notifyEnabled);
+  localStorage.setItem('resend_key',resendKey);
+  
+  window.RESEND_KEY=resendKey;
+  window.NOTIFY_ENABLED=notifyEnabled;
+  
+  showStatus('Settings saved!','info');
+  setTimeout(function(){
+    eid('settings-modal').classList.remove('open');
+  },800);
+}
+
+function openSettings(){
+  loadSettings();
+  eid('settings-modal').classList.add('open');
+}
 async function deleteTrade(id){
   await sb.from('trades').delete().eq('id',id);
   trades=trades.filter(function(t){return t.id!==id;});
@@ -1233,6 +1346,7 @@ function confirmClose(){
         +'BC closed '+formatDate(trades[cidx].bcCloseDate)+'@'+trades[cidx].bcClosePrice+'¢'
         +' | BP closed '+formatDate(trades[cidx].bpCloseDate)+'@'+trades[cidx].bpClosePrice+'¢';
       upsertTrade(trades[cidx]);
+      sendTradeCloseNotification(trades[cidx]);
       eid('close-modal').classList.remove('open');
       closingId=null; renderOpen(); renderClosed(); showTab('closed');
     } else {
@@ -1263,7 +1377,9 @@ function confirmClose(){
       trades[cidx].wl=totalPnl>0?'Win':totalPnl<0?'Loss':'';
       trades[cidx].comments=(trades[cidx].comments?trades[cidx].comments+' | ':'')+'Partials: '+trades[cidx].partials.map(function(p){return p.qty+'@'+p.price+'¢';}).join(', ');
     }
-    upsertTrade(trades[cidx]); eid('close-modal').classList.remove('open');
+    upsertTrade(trades[cidx]);
+    sendTradeCloseNotification(trades[cidx]);
+    eid('close-modal').classList.remove('open');
     closingId=null; renderOpen(); renderClosed(); showTab('closed');
   }
 }
@@ -2220,6 +2336,7 @@ on('btn-import-json','click',function(){ eid('import-file').click(); });
 on('import-file','change',function(){
   if(this.files&&this.files[0]){ importJSON(this.files[0]); this.value=''; }
 });
+on('btn-save-settings','click',saveSettings);
 
 // ── Init ──────────────────────────────────────────────────────────────────
 // ── App init / login / guest mode ────────────────────────────────────────
@@ -2240,6 +2357,7 @@ function applyGuestMode(){
 
 function initApp(){
   userRole=sessionStorage.getItem('stem_role');
+  loadSettings();
   document.querySelector('.app').insertAdjacentHTML('afterbegin',
     '<div id="sb-loading" style="background:#f0f8e8;border:1px solid #c8e4a0;border-radius:8px;padding:10px 16px;margin-bottom:12px;font-size:13px;color:#3B6D11;">⏳ Loading trades from database...</div>'
   );

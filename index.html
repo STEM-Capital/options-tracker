@@ -257,7 +257,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
     
     <div class="fgrp" style="margin-bottom:16px">
       <span class="lbl">Phone Number</span>
-      <input type="text" id="sms-phone" placeholder="7808713792@msg.telus.com" readonly style="background:#f5f5f3;color:#888">
+      <input type="text" id="sms-phone" placeholder="7808713792@msg.telus.com" style="width:100%">
       <p style="font-size:11px;color:#999;margin-top:6px">Telus SMS gateway (sends as email to SMS)</p>
     </div>
     
@@ -450,7 +450,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
         <div class="fg4">
           <div class="fgrp"><span class="lbl">BC credit ($)</span><div style="position:relative;display:flex;align-items:center"><span style="position:absolute;left:9px;font-size:13px;color:#777;pointer-events:none;z-index:1">$</span><input style="padding-left:22px;" id="fm-bc-credit" type="text" inputmode="decimal" value="0.50"></div></div>
           <div class="fgrp"><span class="lbl">BC received ($)</span><input id="fm-bc-received" readonly></div>
-          <div class="fgrp"><span class="lbl">BC target ($)</span><input id="fm-bc-target" readonly style="background:#fef0d8;color:#7a4500;font-weight:600"></div>
+          <div class="fgrp"><span class="lbl">BC target ($)</span><input id="fm-bc-target" style="background:#fef0d8;color:#7a4500;font-weight:600"></div>
         </div>
       </div>
       <div class="leg" style="margin-bottom:8px">
@@ -458,7 +458,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
         <div class="fg4">
           <div class="fgrp"><span class="lbl">BP credit ($)</span><div style="position:relative;display:flex;align-items:center"><span style="position:absolute;left:9px;font-size:13px;color:#777;pointer-events:none;z-index:1">$</span><input style="padding-left:22px;" id="fm-bp-credit" type="text" inputmode="decimal" value="0.50"></div></div>
           <div class="fgrp"><span class="lbl">BP received ($)</span><input id="fm-bp-received" readonly></div>
-          <div class="fgrp"><span class="lbl">BP target ($)</span><input id="fm-bp-target" readonly style="background:#d8f4eb;color:#0a5e3a;font-weight:600"></div>
+          <div class="fgrp"><span class="lbl">BP target ($)</span><input id="fm-bp-target" style="background:#d8f4eb;color:#0a5e3a;font-weight:600"></div>
         </div>
       </div>
       <div class="leg" style="background:#eeecff;border-color:#c8c4ff">
@@ -466,7 +466,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
         <div class="fg4">
           <div class="fgrp"><span class="lbl">Total credit ($)</span><input id="fm-ic-total-credit" readonly style="font-weight:600;color:#4a3db0"></div>
           <div class="fgrp"><span class="lbl">Total received ($)</span><input id="fm-ic-received" readonly style="font-weight:600"></div>
-          <div class="fgrp"><span class="lbl">Total target ($)</span><input id="fm-ic-total-target" readonly style="font-weight:600;color:#4a3db0"></div>
+          <div class="fgrp"><span class="lbl">Total target ($)</span><input id="fm-ic-total-target" style="font-weight:600;color:#4a3db0"></div>
         </div>
       </div>
     </div>
@@ -516,6 +516,38 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
       <div class="fgrp"><span class="lbl">Target ($)</span><input id="em-target"></div>
     </div>
     <div class="fgrp" style="margin-bottom:14px"><span class="lbl">Comments</span><textarea id="em-comments" placeholder="Notes…"></textarea></div>
+    
+    <!-- Commissions section -->
+    <div id="em-commissions-section" style="background:#f9f9f9;border-radius:8px;padding:12px;margin-bottom:16px">
+      <div class="sh" style="margin:0 0 10px 0">Commissions breakdown</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+        <div>
+          <span class="lbl">Open commission</span>
+          <div id="em-comm-open" style="background:#fff;padding:8px;border-radius:4px;border:1px solid #e0e0e0;font-weight:600">—</div>
+        </div>
+        <div>
+          <span class="lbl">E1 Commission</span>
+          <div id="em-comm-e1" style="background:#fff;padding:8px;border-radius:4px;border:1px solid #e0e0e0;font-weight:600">—</div>
+        </div>
+        <div>
+          <span class="lbl">E2 Commission</span>
+          <div id="em-comm-e2" style="background:#fff;padding:8px;border-radius:4px;border:1px solid #e0e0e0;font-weight:600">—</div>
+        </div>
+        <div>
+          <span class="lbl">BC Close Comm</span>
+          <div id="em-comm-bc" style="background:#fff;padding:8px;border-radius:4px;border:1px solid #e0e0e0;font-weight:600">—</div>
+        </div>
+        <div>
+          <span class="lbl">BP Close Comm</span>
+          <div id="em-comm-bp" style="background:#fff;padding:8px;border-radius:4px;border:1px solid #e0e0e0;font-weight:600">—</div>
+        </div>
+        <div>
+          <span class="lbl" style="color:#2d6e0f;font-weight:700">TOTAL</span>
+          <div id="em-comm-total" style="background:#f0f8e8;padding:8px;border-radius:4px;border:2px solid #2d6e0f;font-weight:700;color:#2d6e0f">$0.00</div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Partial closes section -->
     <div id="em-partials-section" style="display:none;margin-bottom:16px">
       <div class="sh" style="margin-top:8px">Partial closes</div>
@@ -555,12 +587,73 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
     <div class="fg">
       <div class="fgrp"><span class="lbl">P&L ($)</span><input id="ecm-pnl"></div>
       <div class="fgrp"><span class="lbl">Realized P&L ($)</span><input id="ecm-rpnl"></div>
+      <div class="fgrp"><span class="lbl">Short Δ</span><input id="ecm-delta" type="number" step="0.001" placeholder="0.30" min="0" max="1"></div>
+    </div>
+    <div class="fg">
+      <div class="fgrp"><span class="lbl">Strike(s)</span><input id="ecm-short" type="text" placeholder="e.g. 6000 / 5900"></div>
       <div class="fgrp"><span class="lbl">W/L</span><select id="ecm-wl"><option value="">—</option><option>Win</option><option>Loss</option></select></div>
     </div>
     <div class="fgrp" style="margin-bottom:16px"><span class="lbl">Comments</span><textarea id="ecm-comments" placeholder="Notes…"></textarea></div>
+    
+    <!-- Commission Debugging Section -->
+    <div id="ecm-comm-section" style="background:#fff9e6;border:2px solid #f0c000;border-radius:8px;padding:12px;margin-bottom:16px">
+      <div class="sh" style="margin:0 0 10px 0;color:#7a4500">⚠ Commission Fields</div>
+      <p style="font-size:11px;color:#666;margin-bottom:10px">Your trade has these commission fields available (for Iron Condors or manual entry):</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div>
+          <span class="lbl">Open Comm</span>
+          <input id="ecm-open-comm" type="number" step="0.01" placeholder="0.00" style="width:100%;">
+        </div>
+        <div>
+          <span class="lbl">E1 Commission</span>
+          <input id="ecm-e1-comm-view" type="number" step="0.01" readonly style="width:100%;background:#f0f0f0;color:#888;">
+        </div>
+        <div>
+          <span class="lbl">E2 Commission</span>
+          <input id="ecm-e2-comm-view" type="number" step="0.01" readonly style="width:100%;background:#f0f0f0;color:#888;">
+        </div>
+        <div>
+          <span class="lbl">BC Close Comm</span>
+          <input id="ecm-bc-comm" type="number" step="0.01" placeholder="0.00" style="width:100%;">
+        </div>
+        <div>
+          <span class="lbl">BP Close Comm</span>
+          <input id="ecm-bp-comm" type="number" step="0.01" placeholder="0.00" style="width:100%;">
+        </div>
+        <div>
+          <span class="lbl" style="color:#2d6e0f;font-weight:700">TOTAL COMMS</span>
+          <input id="ecm-comm-total" type="text" readonly style="width:100%;background:#f0f8e8;border:2px solid #2d6e0f;color:#2d6e0f;font-weight:700;">
+        </div>
+      </div>
+      <p style="font-size:11px;color:#666;margin-top:10px"><strong>If your commissions are only in Comments,</strong> fill in the BC/BP fields above and click Save to fix them.</p>
+    </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-g" onclick="confirmEditClosed()">Save changes</button>
       <button class="btn" onclick="document.getElementById('edit-closed-modal').classList.remove('open'); editClosedId=null;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMMENT EDIT MODAL (Trade History) -->
+<div id="history-comment-modal" class="modal-overlay" onclick="if(event.target===this){this.classList.remove('open');}">
+  <div class="modal-box">
+    <div class="modal-title">Edit trade comment — <span id="hcm-ticker"></span></div>
+    <p style="font-size:12px;color:#777;margin-bottom:14px">Add or edit comments for this trade.</p>
+    <div class="fgrp" style="margin-bottom:16px"><span class="lbl">Comments</span><textarea id="hcm-comments" placeholder="Notes about this trade…" style="min-height:100px"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" onclick="confirmHistoryComment()">Save</button>
+      <button class="btn" onclick="document.getElementById('history-comment-modal').classList.remove('open');">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- POSITION DETAIL MODAL (tap Partial Closed / Remaining) -->
+<div id="posdetail-modal" class="modal-overlay" onclick="if(event.target===this){this.classList.remove('open');}">
+  <div class="modal-box">
+    <div class="modal-title" id="pd-title"></div>
+    <div id="pd-body" style="font-size:13px"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn" onclick="document.getElementById('posdetail-modal').classList.remove('open');">Close</button>
     </div>
   </div>
 </div>
@@ -584,7 +677,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
   <div class="tw"><table class="tt">
     <thead><tr>
       <th style="width:50px">Ticker</th><th style="width:65px">Open</th><th style="width:65px">Close</th>
-      <th style="width:55px">Setup</th><th style="width:80px">Direction</th><th style="width:40px">Days</th>
+      <th style="width:55px">Setup</th><th style="width:80px">Direction</th><th style="width:50px">Strike(s)</th><th style="width:40px">Days</th>
       <th style="width:68px">Credit/Debit</th><th style="width:74px">Rcvd/Paid</th>
       <th style="width:64px">P&amp;L</th><th style="width:76px">Realized P&L</th>
       <th style="width:40px">W/L</th><th style="width:72px">Exit</th>
@@ -602,7 +695,7 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
   <div class="cw"><canvas id="equity-chart"></canvas></div>
   <div style="margin-top:20px" class="sh">Segmentation — setup × direction</div>
   <div class="tw"><table class="st">
-    <thead><tr><th>Segment</th><th>Trades</th><th>Win rate</th><th>Avg P&amp;L</th><th>Total P&amp;L</th><th>Total commissions</th></tr></thead>
+    <thead><tr><th>Segment</th><th>Trades</th><th>Win rate</th><th>Avg total P&amp;L</th><th>Total P&amp;L</th><th>Total commissions</th><th>Realized P&amp;L</th></tr></thead>
     <tbody id="seg-tbody"></tbody>
   </table></div>
 
@@ -621,7 +714,9 @@ function doLogout(){sessionStorage.removeItem('stem_role');location.reload();}
         <th style="width:68px">Credit/Debit</th>
         <th style="width:68px">Close</th>
         <th style="width:40px">Days</th>
-        <th style="width:76px">Realized P&L</th>
+        <th style="width:60px">P&L</th>
+        <th style="width:60px">Rlzd P&L</th>
+        <th style="width:120px">Comments</th>
         <th style="width:78px">Status</th>
       </tr></thead>
       <tbody id="history-tbody"></tbody>
@@ -736,7 +831,15 @@ var closingId=null;
 
 function load(){}
 async function save(){ localStorage.setItem('opt_cache',JSON.stringify(trades)); }
+// Whether the Supabase 'trades' table has the optional 'partials' column.
+// Detected at load so the app works whether or not the column has been added yet.
+var HAS_PARTIALS_COL=false;
+async function detectSchema(){
+  try{ var r=await sb.from('trades').select('partials').limit(1); HAS_PARTIALS_COL=!r.error; }
+  catch(e){ HAS_PARTIALS_COL=false; }
+}
 async function loadFromSupabase(){
+  await detectSchema();
   try{
     var res=await sb.from('trades').select('*').order('created_at',{ascending:true});
     if(res.error){ loadFromCache(); return; }
@@ -746,7 +849,7 @@ async function loadFromSupabase(){
 }
 function loadFromCache(){ try{trades=JSON.parse(localStorage.getItem('opt_cache')||'[]');}catch(e){trades=[];} }
 function tradeToDb(t){
-  return {id:t.id,ticker:t.ticker||'',open_date:t.openDate||'',setup:t.setup||'',dir:t.dir||'',
+  var o={id:t.id,ticker:t.ticker||'',open_date:t.openDate||'',setup:t.setup||'',dir:t.dir||'',
     roll:t.roll||'',hedge:t.hedge||'',short_strike:t.short||'',long_strike:t.long||'',
     dte:t.dte||'',delta:t.delta||'',credit:t.credit||'',debit:t.debit||'',
     bc_credit:t.bcCredit||'',bp_credit:t.bpCredit||'',risk:t.risk||'',received:t.received||'',
@@ -761,8 +864,13 @@ function tradeToDb(t){
     bc_close_pnl:t.bcClosePnl||'',bc_close_date:t.bcCloseDate||'',
     bp_close_price:t.bpClosePrice||'',bp_close_comm:t.bpCloseComm||'',
     bp_close_pnl:t.bpClosePnl||'',bp_close_date:t.bpCloseDate||''};
+  // Only write 'partials' if the column exists, otherwise the upsert would be rejected.
+  if(HAS_PARTIALS_COL) o.partials=JSON.stringify(t.partials||[]);
+  return o;
 }
 function dbToTrade(r){
+  var parts=[];
+  if(r.partials){ try{ parts=typeof r.partials==='string'?JSON.parse(r.partials):r.partials; }catch(e){ parts=[]; } }
   return {id:r.id,ticker:r.ticker,openDate:r.open_date,setup:r.setup,dir:r.dir,
     roll:r.roll,hedge:r.hedge,short:r.short_strike,long:r.long_strike,dte:r.dte,delta:r.delta,
     credit:r.credit,debit:r.debit,bcCredit:r.bc_credit,bpCredit:r.bp_credit,
@@ -775,7 +883,8 @@ function dbToTrade(r){
     bcClosePrice:r.bc_close_price,bcCloseComm:r.bc_close_comm,
     bcClosePnl:r.bc_close_pnl,bcCloseDate:r.bc_close_date,
     bpClosePrice:r.bp_close_price,bpCloseComm:r.bp_close_comm,
-    bpClosePnl:r.bp_close_pnl,bpCloseDate:r.bp_close_date};
+    bpClosePnl:r.bp_close_pnl,bpCloseDate:r.bp_close_date,
+    partials:parts};
 }
 async function upsertTrade(t){
   var res=await sb.from('trades').upsert(tradeToDb(t),{onConflict:'id'});
@@ -810,7 +919,7 @@ async function sendTradeCloseNotification(t){
       },
       body:JSON.stringify({
         from:'noreply@imocs-safety.com',
-        to:'7808713792@msg.telus.com',
+        to: window.NOTIFY_PHONE || '7808713792@msg.telus.com',
         subject:'Trade Close Notification',
         html:'<p>'+msgBody.replace(/\n/g,'<br>')+'</p>'
       })
@@ -826,22 +935,28 @@ async function sendTradeCloseNotification(t){
 function loadSettings(){
   var notifyEnabled=localStorage.getItem('notify_enabled')==='true';
   var resendKey=localStorage.getItem('resend_key')||'';
+  var notifyPhone=localStorage.getItem('notify_phone')||'7808713792@msg.telus.com';
   
   eid('notify-enabled').checked=notifyEnabled;
   eid('resend-key').value=resendKey;
+  eid('sms-phone').value=notifyPhone;
   window.RESEND_KEY=resendKey;
   window.NOTIFY_ENABLED=notifyEnabled;
+  window.NOTIFY_PHONE=notifyPhone;
 }
 
 function saveSettings(){
   var notifyEnabled=eid('notify-enabled').checked;
   var resendKey=eid('resend-key').value;
+  var notifyPhone=eid('sms-phone').value||'7808713792@msg.telus.com';
   
   localStorage.setItem('notify_enabled',notifyEnabled);
   localStorage.setItem('resend_key',resendKey);
+  localStorage.setItem('notify_phone',notifyPhone);
   
   window.RESEND_KEY=resendKey;
   window.NOTIFY_ENABLED=notifyEnabled;
+  window.NOTIFY_PHONE=notifyPhone;
   
   showStatus('Settings saved!','info');
   setTimeout(function(){
@@ -893,6 +1008,119 @@ function isDir(){ var d=getDir(); return d==='Long Call'||d==='Long Put'; }
 function isSpread(){ return !isIC()&&!isDir(); }
 function isOpen(t){ return !t.pending && !t.cancelled && (!t.closeDate||!t.exitReason); }
 function isICLegClosed(t,side){ return side==='bc'?!!t.bcClosed:!!t.bpClosed; }
+
+// ── Leg model + unified exit engine ────────────────────────────────────────
+// A trade is modelled as one or two legs (single spread/directional, or BC+BP
+// for an Iron Condor). Every exit — partial or full — is recorded as one entry
+// in t.partials, tagged with its leg's side ('single'|'bc'|'bp'). Remaining
+// quantity and P&L are DERIVED from these records, so there is one source of
+// truth and no separate "closed flag" vs "partial qty" bookkeeping to drift.
+// Convention (agreed): each exit stores GROSS P&L (before commissions) plus its
+// own commission. Realized P&L = gross − all exit commissions − opening commission.
+function legSidesOf(t){ return t.dir==='Iron Condor'?['bc','bp']:['single']; }
+function legCreditOf(t,side){
+  if(t.dir==='Iron Condor') return side==='bc'?(parseFloat(t.bcCredit||'0')||0):(parseFloat(t.bpCredit||'0')||0);
+  return parseFloat(t.credit||t.debit||'0')||0;
+}
+function partsForSide(t,side){
+  return (t.partials||[]).filter(function(p){
+    return side==='single' ? (!p.side||p.side==='full'||p.side==='single') : p.side===side;
+  });
+}
+function legState(t,side){
+  var filled=parseInt(t.filled)||0;
+  var parts=partsForSide(t,side);
+  var closedQty=parts.reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
+  var gross=parts.reduce(function(a,p){
+    // p.gross is the new convention; older cached records stored net p.pnl (= gross − comm)
+    var g=(p.gross!=null)?parseFloat(p.gross):((parseFloat(p.pnl)||0)+(parseFloat(p.comm)||0));
+    return a+(isNaN(g)?0:g);
+  },0);
+  var comm=parts.reduce(function(a,p){return a+(parseFloat(p.comm)||0);},0);
+  // Reconcile with legacy per-leg close fields (legs closed via the old Close modal
+  // path before this engine existed, or loaded from a DB row without partials).
+  var flagClosed=(side==='bc')?!!t.bcClosed:(side==='bp')?!!t.bpClosed:false;
+  if(flagClosed){
+    if(closedQty<filled) closedQty=filled;
+    if(parts.length===0){
+      var pf=(side==='bc')?t.bcClosePnl:(side==='bp')?t.bpClosePnl:'';
+      var cf=(side==='bc')?t.bcCloseComm:(side==='bp')?t.bpCloseComm:'';
+      gross+=parseFloat((pf||'0').toString().replace(/[^0-9.-]/g,''))||0;
+      comm +=parseFloat(cf||'0')||0;
+    }
+  }
+  return {side:side, credit:legCreditOf(t,side), filled:filled, closedQty:closedQty,
+          remaining:Math.max(0,filled-closedQty), closed:(filled>0&&closedQty>=filled),
+          gross:gross, comm:comm};
+}
+function legsOf(t){ return legSidesOf(t).map(function(s){return legState(t,s);}); }
+function legRemaining(t,side){ return legState(t,side).remaining; }
+
+// Record one exit on a leg. Full close = pass qty = current remaining.
+// opts: {tradeId, side, qty, price, price2, comm, date, notes, reason}
+// Returns {ok, finalized, error}.
+function recordExit(opts){
+  var idx=trades.findIndex(function(x){return x.id===opts.tradeId;});
+  if(idx<0) return {ok:false,error:'Trade not found.'};
+  var t=trades[idx];
+  var ic=t.dir==='Iron Condor';
+  var side=ic?(opts.side==='bc'||opts.side==='bp'?opts.side:'single'):'single';
+  var qty=parseInt(opts.qty)||0;
+  var price=parseFloat(opts.price)||0;
+  var price2=parseFloat(opts.price2)||0;
+  var comm=parseFloat(opts.comm)||0;
+  if(qty<=0) return {ok:false,error:'Enter a quantity of at least 1.'};
+  // Note: a $0 exit is valid (expired worthless / bought back at 0), so price is not required.
+  var leg=legState(t,side);
+  if(qty>leg.remaining) return {ok:false,error:'Quantity exceeds the '+leg.remaining+' still open on this leg.'};
+
+  var credit=leg.credit;
+  var exit=price+price2;
+  var gross = t.isDir ? (exit-credit)*qty*100 : (credit-exit)*qty*100;
+  var rec={date:opts.date||new Date().toISOString().split('T')[0], price:price,
+           price2:price2||'', qty:qty, comm:comm, gross:parseFloat(gross.toFixed(2)),
+           side:side, notes:opts.notes||''};
+  if(!trades[idx].partials) trades[idx].partials=[];
+  trades[idx].partials.push(rec);
+
+  // Update leg-close flags + persisted per-leg fields when a leg becomes fully closed
+  var ls=legState(trades[idx],side);
+  if(ic && ls.closed){
+    if(side==='bc'){ trades[idx].bcClosed=true; trades[idx].bcClosePnl='$'+ls.gross.toFixed(2);
+      trades[idx].bcCloseComm=String(ls.comm); trades[idx].bcClosePrice=String(price); trades[idx].bcCloseDate=rec.date; }
+    else if(side==='bp'){ trades[idx].bpClosed=true; trades[idx].bpClosePnl='$'+ls.gross.toFixed(2);
+      trades[idx].bpCloseComm=String(ls.comm); trades[idx].bpClosePrice=String(price); trades[idx].bpCloseDate=rec.date; }
+  }
+
+  var finalized=legsOf(trades[idx]).every(function(l){return l.closed;});
+  if(finalized) finalizeTrade(idx, rec.date, opts.reason||'Closed');
+  upsertTrade(trades[idx]);
+  return {ok:true, finalized:finalized};
+}
+
+// Compute final outcome from the derived legs (gross / realized) and stamp it.
+function finalizeTrade(idx, date, reason){
+  var t=trades[idx];
+  var legs=legsOf(t);
+  var gross=legs.reduce(function(a,l){return a+l.gross;},0);
+  var exitComm=legs.reduce(function(a,l){return a+l.comm;},0);
+  var openC=parseFloat(t.openComm||'0')||0;
+  var rpnl=gross-exitComm-openC;
+  trades[idx].closeDate=date;
+  trades[idx].exitReason=reason||'Closed';
+  if(t.openDate&&date){ var d=Math.round((new Date(date)-new Date(t.openDate))/86400000); trades[idx].daysOpen=(d>=0)?String(d):''; }
+  trades[idx].pnl='$'+gross.toFixed(2);
+  trades[idx].rpnl='$'+rpnl.toFixed(2);
+  trades[idx].wl=rpnl>0?'Win':rpnl<0?'Loss':'';
+  if(t.dir==='Iron Condor'){
+    var bc=legs.filter(function(l){return l.side==='bc';})[0]||{gross:0};
+    var bp=legs.filter(function(l){return l.side==='bp';})[0]||{gross:0};
+    var summary='BC: $'+bc.gross.toFixed(2)+' | BP: $'+bp.gross.toFixed(2);
+    if((trades[idx].comments||'').indexOf(summary)===-1)
+      trades[idx].comments=(trades[idx].comments?trades[idx].comments+' | ':'')+summary;
+  }
+}
+
 function isPending(t){ return !!t.pending; }
 function rpnlNum(t){
   var s=(t.rpnl||'').trim(); if(!s) return 0;
@@ -1058,7 +1286,7 @@ function saveTrade(){
   var t={
     id:Date.now(), ticker, openDate:gv('f-open-date'), setup:(isIC()||isDir())?'':gv('f-setup'),
     roll:d2?'':gv('f-roll'), hedge:d2?'':gv('f-hedge'), dir:getDir(),
-    short: ic ? gv('ic-bc-short')+' / '+gv('ic-bp-short') : d2 ? gv('dir-strike') : gv('f-short'),
+    short: ic ? ((gv('ic-bc-short')||gv('ic-bp-short')) ? gv('ic-bc-short')+' / '+gv('ic-bp-short') : '') : d2 ? gv('dir-strike') : gv('f-short'),
     long:  ic ? gv('ic-bc-long')+' / '+gv('ic-bp-long')   : d2 ? '' : gv('f-long'),
     dte:   ic ? gv('ic-bc-dte') : d2 ? gv('dir-dte') : gv('f-dte'),
     expiry: ic ? gv('ic-bc-expiry') : d2 ? gv('dir-expiry') : gv('f-expiry'),
@@ -1160,14 +1388,13 @@ function makePartialCloseBtn(id){
   if(ic){
     var sel=document.createElement('select');
     sel.style.cssText='font-size:12px;padding:4px 6px;border:1px solid #888;border-radius:6px;color:#666;background:#fff;cursor:pointer;font-family:inherit';
-    ['— Partial —','Partial Call Side','Partial Put Side','Partial Position'].forEach(function(opt,i){
+    ['— Partial —','Partial Call Side','Partial Put Side'].forEach(function(opt,i){
       var o=document.createElement('option'); o.value=i; o.textContent=opt; sel.appendChild(o);
     });
     sel.addEventListener('change',(function(tid){ return function(){
       var v=parseInt(this.value);
       if(v===1) openPartialModal(tid,'bc');
       else if(v===2) openPartialModal(tid,'bp');
-      else if(v===3) openPartialModal(tid,'full');
       this.value=0;
     }; })(id));
     return sel;
@@ -1208,7 +1435,6 @@ function openCloseModal(id, side){
     var icClosedQty=(t.partials||[]).reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
     var filledVal=parseInt(t.filled)||0;
     var icRemainQty=filledVal-icClosedQty;
-    console.log('IC Close - filled:',t.filled,'(type:',typeof t.filled+') closedQty:',icClosedQty,'remain:',icRemainQty);
     eid('close-modal').setAttribute('data-remaining', icRemainQty);
     // Populate remaining spreads fields
     sv('m-remaining-full', String(icRemainQty));
@@ -1308,80 +1534,40 @@ function confirmClose(){
   var cidx=trades.findIndex(function(x){ return x.id===closingId; }); if(cidx<0) return;
   var t=trades[cidx], ic=t.dir==='Iron Condor';
   var side=eid('close-modal').getAttribute('data-side')||'full';
-  trades[cidx].comments=gv('m-comments');
+  var date=gv('m-cd'), reason=gv('m-er');
+  var closeNote=gv('m-comments');
+  if(closeNote) trades[cidx].comments=(trades[cidx].comments?trades[cidx].comments+' | ':'')+closeNote;
 
+  var r;
   if(ic && (side==='bc'||side==='bp')){
-    // ── Single leg close — trade stays OPEN ──────────────────────────────
-    var legPnl=parseFloat(eid('close-modal').getAttribute('data-leg-pnl')||'0')||0;
-    var legRpnl=parseFloat(eid('close-modal').getAttribute('data-leg-rpnl')||'0')||0;
-    if(side==='bc'){
-      trades[cidx].bcClosePrice=gv('m-bc-exit');
-      trades[cidx].bcCloseComm=gv('m-bc-comm');
-      trades[cidx].bcClosePnl='$'+legPnl.toFixed(2);
-      trades[cidx].bcCloseDate=gv('m-cd');
-      trades[cidx].bcClosed=true;
-    } else {
-      trades[cidx].bpClosePrice=gv('m-bp-exit');
-      trades[cidx].bpCloseComm=gv('m-bp-comm');
-      trades[cidx].bpClosePnl='$'+legPnl.toFixed(2);
-      trades[cidx].bpCloseDate=gv('m-cd');
-      trades[cidx].bpClosed=true;
-    }
-    // Check if BOTH legs are now closed — if so, fully close the trade
-    if(trades[cidx].bcClosed && trades[cidx].bpClosed){
-      var bcPnl=parseFloat((trades[cidx].bcClosePnl||'$0').replace(/[^0-9.-]/g,''))||0;
-      var bpPnl=parseFloat((trades[cidx].bpClosePnl||'$0').replace(/[^0-9.-]/g,''))||0;
-      var totalPnl=bcPnl+bpPnl;
-      var bcComm=parseFloat(trades[cidx].bcCloseComm||'0')||0;
-      var bpComm=parseFloat(trades[cidx].bpCloseComm||'0')||0;
-      var oc=parseFloat(t.openComm||'0')||0;
-      var totalRpnl=totalPnl-bcComm-bpComm-oc;
-      trades[cidx].closeDate=gv('m-cd');
-      trades[cidx].daysOpen=gv('m-do');
-      trades[cidx].exitReason=gv('m-er');
-      trades[cidx].pnl='$'+totalPnl.toFixed(2);
-      trades[cidx].rpnl='$'+totalRpnl.toFixed(2);
-      trades[cidx].wl=totalRpnl>0?'Win':totalRpnl<0?'Loss':'';
-      trades[cidx].comments=(trades[cidx].comments?trades[cidx].comments+' | ':'')
-        +'BC closed '+formatDate(trades[cidx].bcCloseDate)+'@'+trades[cidx].bcClosePrice+'¢'
-        +' | BP closed '+formatDate(trades[cidx].bpCloseDate)+'@'+trades[cidx].bpClosePrice+'¢';
-      upsertTrade(trades[cidx]);
-      sendTradeCloseNotification(trades[cidx]);
-      eid('close-modal').classList.remove('open');
-      closingId=null; renderOpen(); renderClosed(); showTab('closed');
-    } else {
-      // One leg closed, stay open
-      upsertTrade(trades[cidx]);
-      eid('close-modal').classList.remove('open');
-      closingId=null; renderOpen();
-    }
+    // ── IC single-leg close → close that leg's full remaining ──────────────
+    var rem=legRemaining(t,side);
+    var p1=(side==='bc')?gv('m-bc-exit'):gv('m-bp-exit');
+    var p2=(side==='bc')?gv('m-bc-exit2'):gv('m-bp-exit2');
+    var cm=(side==='bc')?gv('m-bc-comm'):gv('m-bp-comm');
+    r=recordExit({tradeId:closingId, side:side, qty:rem, price:p1, price2:p2, comm:cm, date:date, reason:reason});
+    if(!r.ok){ alert(r.error); return; }
+  } else if(ic){
+    // ── Full IC close (one blended price) → split across legs by credit ────
+    var remBC=legRemaining(t,'bc'), remBP=legRemaining(t,'bp');
+    var bcCr=parseFloat(t.bcCredit||'0')||0, bpCr=parseFloat(t.bpCredit||'0')||0, tot=bcCr+bpCr;
+    var fullExit=parseFloat(gv('m-full-exit'))||0, fullComm=gv('m-full-comm');
+    var wBC=tot>0?bcCr/tot:0.5;
+    if(remBC>0){ r=recordExit({tradeId:closingId, side:'bc', qty:remBC, price:fullExit*wBC,    comm:fullComm, date:date, reason:reason}); if(!r.ok){ alert(r.error); return; } }
+    if(remBP>0){ r=recordExit({tradeId:closingId, side:'bp', qty:remBP, price:fullExit*(1-wBC), comm:'0',      date:date, reason:reason}); if(!r.ok){ alert(r.error); return; } }
   } else {
-    // ── Full position close (IC full, spread, or directional) ────────────
-    trades[cidx].closeDate=gv('m-cd'); trades[cidx].daysOpen=gv('m-do');
-    trades[cidx].exitReason=gv('m-er');
-    if(ic){
-      trades[cidx].e1price=gv('m-full-exit'); trades[cidx].e1comm=gv('m-full-comm');
-      trades[cidx].pnl=gv('m-ic-pnl'); trades[cidx].rpnl=gv('m-ic-rpnl'); trades[cidx].wl=gv('m-ic-wl');
-    } else {
-      trades[cidx].e1price=gv('m-e1p'); trades[cidx].e1qty=gv('m-e1q'); trades[cidx].e1comm=gv('m-e1c');
-      trades[cidx].e2price=gv('m-e2p'); trades[cidx].e2qty=gv('m-e2q'); trades[cidx].e2comm=gv('m-e2c');
-      trades[cidx].pnl=gv('m-pnl'); trades[cidx].rpnl=gv('m-rpnl'); trades[cidx].wl=gv('m-wl');
-    }
-    // Add partials P&L if any
-    if(trades[cidx].partials&&trades[cidx].partials.length>0){
-      var partialPnl=trades[cidx].partials.reduce(function(a,p){return a+parseFloat(p.pnl||0);},0);
-      var thisPnl=parseFloat((trades[cidx].pnl||'$0').replace(/[^0-9.-]/g,''))||0;
-      var totalPnl=partialPnl+thisPnl;
-      trades[cidx].pnl='$'+totalPnl.toFixed(2);
-      trades[cidx].rpnl='$'+totalPnl.toFixed(2);
-      trades[cidx].wl=totalPnl>0?'Win':totalPnl<0?'Loss':'';
-      trades[cidx].comments=(trades[cidx].comments?trades[cidx].comments+' | ':'')+'Partials: '+trades[cidx].partials.map(function(p){return p.qty+'@'+p.price+'¢';}).join(', ');
-    }
-    upsertTrade(trades[cidx]);
-    sendTradeCloseNotification(trades[cidx]);
-    eid('close-modal').classList.remove('open');
-    closingId=null; renderOpen(); renderClosed(); showTab('closed');
+    // ── Spread / directional → close as up to two tranches on the single leg ─
+    var e1q=parseInt(gv('m-e1q'))||0, e2q=parseInt(gv('m-e2q'))||0;
+    if(!e1q && !e2q){ alert('Enter a quantity to close.'); return; }
+    if(e1q>0){ r=recordExit({tradeId:closingId, side:'single', qty:e1q, price:gv('m-e1p'), comm:gv('m-e1c'), date:date, reason:reason}); if(!r.ok){ alert(r.error); return; } }
+    if(e2q>0){ r=recordExit({tradeId:closingId, side:'single', qty:e2q, price:gv('m-e2p'), comm:gv('m-e2c'), date:date, reason:reason}); if(!r.ok){ alert(r.error); return; } }
   }
+
+  if(r && r.finalized) sendTradeCloseNotification(trades[cidx]);
+  eid('close-modal').classList.remove('open');
+  closingId=null;
+  renderOpen(); renderClosed();
+  if(r && r.finalized) showTab('closed');
 }
 
 // ── Render tables ─────────────────────────────────────────────────────────
@@ -1412,28 +1598,35 @@ function renderOpen(){
      ['<span style="color:#A32D2D">'+tg+'</span>'],
      [t.filled||'']
     ].forEach(function(h){ row.insertCell().innerHTML=h[0]; });
-    // Partial closed + Remaining columns
-    var partials=t.partials||[];
-    var closedQty=partials.reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
+    // Partial closed + Remaining columns — derived from the leg model, tappable for detail
     var filledQty=parseInt(t.filled)||0;
-    var remainQty=filledQty-closedQty;
     var partialCell=row.insertCell();
     var remainCell=row.insertCell();
-    // IC leg-aware partial/remaining display
-    var isIC=t.dir==='Iron Condor';
-    if(isIC && (t.bcClosed||t.bpClosed) && !(t.bcClosed&&t.bpClosed)){
-      // One IC leg closed, other still open
-      var openLeg=t.bcClosed?'BP (Put)':'BC (Call)';
-      var closedLeg=t.bcClosed?'BC (Call)':'BP (Put)';
-      partialCell.innerHTML='<span style="background:#fff3cd;color:#856404;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+closedLeg+' leg has been closed">'+closedLeg+' closed</span>';
-      remainCell.innerHTML='<span style="background:#d8f4eb;color:#0a5e3a;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+filledQty+' '+openLeg+' spreads still open">'+filledQty+' '+openLeg+'</span>';
-    } else if(partials.length>0){
-      partialCell.innerHTML='<span style="background:#fff3cd;color:#856404;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+closedQty+' of '+filledQty+' spreads partially closed">'+closedQty+' of '+filledQty+'</span>';
-      remainCell.innerHTML='<span style="background:#ddeeff;color:#0c4480;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600" title="'+remainQty+' spreads still open">'+remainQty+'</span>';
+    var stack=function(items,bg,fg){ // items: array of short strings → vertical badges
+      if(!items.length) return '<span style="color:#ccc;font-size:11px">—</span>';
+      return items.map(function(s){return '<span style="display:inline-block;background:'+bg+';color:'+fg+';padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;margin:1px 0;white-space:nowrap">'+s+'</span>';}).join('<br>');
+    };
+    var legs=legsOf(t);
+    if(t.dir==='Iron Condor'){
+      var bc=legs.filter(function(l){return l.side==='bc';})[0]||{closedQty:0,remaining:filledQty,closed:false};
+      var bp=legs.filter(function(l){return l.side==='bp';})[0]||{closedQty:0,remaining:filledQty,closed:false};
+      var pBits=[], rBits=[];
+      if(bc.closedQty>0) pBits.push('Call '+bc.closedQty);
+      if(bp.closedQty>0) pBits.push('Put '+bp.closedQty);
+      rBits.push('Call '+bc.remaining);
+      rBits.push('Put '+bp.remaining);
+      partialCell.innerHTML=stack(pBits,'#fff3cd','#856404');
+      remainCell.innerHTML =stack(rBits,'#d8f4eb','#0a5e3a');
     } else {
-      partialCell.innerHTML='<span style="color:#ccc;font-size:11px">—</span>';
-      remainCell.innerHTML='<span style="color:#ccc;font-size:11px">—</span>';
+      var lg=legs[0]||{closedQty:0,remaining:filledQty};
+      partialCell.innerHTML = lg.closedQty>0 ? stack([lg.closedQty+' of '+filledQty],'#fff3cd','#856404') : '<span style="color:#ccc;font-size:11px">—</span>';
+      remainCell.innerHTML  = stack([String(lg.remaining)],'#ddeeff','#0c4480');
     }
+    // Make both cells tappable (phone-friendly) to open the position-detail view
+    [partialCell,remainCell].forEach(function(cell){
+      cell.style.cursor='pointer'; cell.title='Tap for position detail';
+      cell.addEventListener('click',(function(tid){ return function(){ openPositionDetail(tid); }; })(t.id));
+    });
     var ac=row.insertCell();
     var wr=document.createElement('div');
     wr.style.cssText='display:flex;gap:5px;align-items:center;flex-wrap:wrap';
@@ -1455,7 +1648,7 @@ function renderClosed(){
   var closed=trades.filter(function(t){ return !isOpen(t); });
   if(!closed.length){
     var r=tbody.insertRow(),c=r.insertCell();
-    c.colSpan=14; c.style.cssText='padding:24px;text-align:center;color:#999';
+    c.colSpan=15; c.style.cssText='padding:24px;text-align:center;color:#999';
     c.textContent='No closed trades'; return;
   }
   closed.forEach(function(t){
@@ -1464,6 +1657,7 @@ function renderClosed(){
     var cl=t.isDir?(t.debit?'$'+parseFloat(t.debit).toFixed(2)+' debit':'—'):(t.credit?'$'+parseFloat(t.credit).toFixed(2):'—');
     [['<strong>'+t.ticker+'</strong>'],
      [formatDate(t.openDate)],[formatDate(t.closeDate)],[(t.setup||'—')],[dirBadge(t.dir)],
+     [(t.short||'—')],
      [(t.daysOpen||'')+'d'],[cl],[t.received||''],
      ['<span style="color:'+pc+'">'+(t.pnl||'')+'</span>'],
      ['<span style="color:'+pc+';font-weight:600">'+(t.rpnl||'')+'</span>'],
@@ -1497,26 +1691,46 @@ function renderDashboard(){
   var avgWin=wins.length?wins.reduce(function(a,t){ return a+rpnlNum(t); },0)/wins.length:0;
   var avgLoss=losses.length?losses.reduce(function(a,t){ return a+rpnlNum(t); },0)/losses.length:0;
   var allC=closed.reduce(function(a,t){
-    var openComm=parseFloat(t.openComm)||0;
-    var e1comm=parseFloat(t.e1comm)||0;
-    var e2comm=parseFloat(t.e2comm)||0;
-    var partialComms=0;
-    if(t.partials&&t.partials.length>0){
-      partialComms=t.partials.reduce(function(a,p){return a+parseFloat(p.comm||0);},0);
+    var openC=parseFloat(t.openComm||'0')||0;
+    var parts=(t.partials||[]);
+    if(parts.length>0){
+      // New engine: single source of truth from partial records
+      return a+openC+parts.reduce(function(b,p){return b+(parseFloat(p.comm)||0);},0);
     }
-    return a+(openComm+e1comm+e2comm+partialComms);
+    // Legacy (pre-engine trades without partials): sum flat fields
+    return a+openC+(parseFloat(t.e1comm)||0)+(parseFloat(t.e2comm)||0)
+             +(parseFloat(t.bcCloseComm)||0)+(parseFloat(t.bpCloseComm)||0);
   },0);
   var maxW=wins.length?Math.max.apply(null,wins.map(rpnlNum)):0;
   var maxL=losses.length?Math.min.apply(null,losses.map(rpnlNum)):0;
   var peak=0,maxDD=0,run=0;
   rpnls.forEach(function(v){ run+=v; if(run>peak)peak=run; var dd=peak-run; if(dd>maxDD)maxDD=dd; });
   var wr=closed.length?((wins.length/closed.length)*100).toFixed(1):0;
-  var deltas=closed.map(function(t){ return parseFloat((t.delta||'').split('/')[0]); }).filter(function(d){ return !isNaN(d); });
+  var deltas=[];
+  closed.forEach(function(t){
+    if(!t.delta) return;
+    // IC trades store "0.064 / 0.092" — include both legs
+    t.delta.split('/').forEach(function(s){ var d=parseFloat(s); if(!isNaN(d)&&d>0) deltas.push(d); });
+  });
   var avgDelta=deltas.length?deltas.reduce(function(a,b){ return a+b; },0)/deltas.length:null;
-  var avgDeltaD=avgDelta!==null?(Math.round(avgDelta/0.1)*0.1).toFixed(2):'—';
-  var daysArr=closed.map(function(t){ return parseFloat(t.daysOpen); }).filter(function(d){ return !isNaN(d)&&d>=0; });
+  var avgDeltaD=avgDelta!==null?avgDelta.toFixed(3):'—';
+  // Calculate days open: if daysOpen is empty, calculate from dates
+  var daysArr=closed.map(function(t){ 
+    var daysManual=parseFloat(t.daysOpen);
+    if(!isNaN(daysManual)&&daysManual>=0) return daysManual;
+    // Auto-calculate from dates if manual not provided
+    if(t.openDate&&t.closeDate){
+      var open=new Date(t.openDate+'T00:00:00');
+      var close=new Date(t.closeDate+'T00:00:00');
+      var diff=(close-open)/(1000*60*60*24);
+      return Math.round(diff);
+    }
+    return NaN;
+  }).filter(function(d){ return !isNaN(d)&&d>=0; });
   var avgDays=daysArr.length?Math.round(daysArr.reduce(function(a,b){ return a+b; },0)/daysArr.length):null;
   function col(n){ return n>=0?'pos':'neg'; }
+  // Calculate total P&L: Total Realized P&L + Total Commissions
+  var totalPnl=total+allC;
   eid('overview-metrics').innerHTML=[
     ['Total trades','neu',closed.length],
     ['Wins','pos',wins.length],
@@ -1526,9 +1740,10 @@ function renderDashboard(){
     ['Avg loss','neg',fmt$(avgLoss)],
     ['Largest win','pos',fmt$(maxW)],
     ['Largest loss','neg',fmt$(maxL)],
+    ['Total P&L',col(totalPnl),fmt$(totalPnl)],
     ['Total realized P&L',col(total),fmt$(total)],
     ['Max drawdown','neg',maxDD>0?'-'+fmt$(maxDD):'$0.00'],
-    ['Total commissions','neu',fmt$(-allC)],
+    ['Total commissions','neu','<span style="color:#A32D2D">'+fmt$(allC)+'</span>'],
     ['Avg short Δ','neu',avgDeltaD],
     ['Avg days open','neu',avgDays!==null?avgDays+'d':'—']
   ].map(function(m){
@@ -1566,23 +1781,23 @@ function renderDashboard(){
     'Long Call','Long Put'
   ];
   var segs={};
-  ALL_SEGS.forEach(function(k){ segs[k]={trades:0,wins:0,rpnls:[],comms:0}; });
+  ALL_SEGS.forEach(function(k){ segs[k]={trades:0,wins:0,rpnls:[],grossPnls:[],comms:0}; });
   closed.forEach(function(t){
     // Iron Condor, Long Call, Long Put don't use setup type prefix
     var noSetup=t.dir==='Iron Condor'||t.dir==='Long Call'||t.dir==='Long Put';
     var k=noSetup?t.dir:(t.setup+' '+t.dir);
-    if(!segs[k]) segs[k]={trades:0,wins:0,rpnls:[],comms:0};
+    if(!segs[k]) segs[k]={trades:0,wins:0,rpnls:[],grossPnls:[],comms:0};
     segs[k].trades++; if(t.wl==='Win') segs[k].wins++;
     segs[k].rpnls.push(rpnlNum(t));
-    // Calculate total commissions: open comm + exit 1 comm + exit 2 comm + partial comms
-    var openComm=parseFloat(t.openComm)||0;
-    var e1comm=parseFloat(t.e1comm)||0;
-    var e2comm=parseFloat(t.e2comm)||0;
-    var partialComms=0;
-    if(t.partials&&t.partials.length>0){
-      partialComms=t.partials.reduce(function(a,p){return a+parseFloat(p.comm||0);},0);
+    segs[k].grossPnls.push(parseFloat((t.pnl||'').replace(/[^0-9.-]/g,''))||0);
+    var openC=parseFloat(t.openComm||'0')||0;
+    var parts=(t.partials||[]);
+    if(parts.length>0){
+      segs[k].comms+=openC+parts.reduce(function(a,p){return a+(parseFloat(p.comm)||0);},0);
+    } else {
+      segs[k].comms+=openC+(parseFloat(t.e1comm)||0)+(parseFloat(t.e2comm)||0)
+                       +(parseFloat(t.bcCloseComm)||0)+(parseFloat(t.bpCloseComm)||0);
     }
-    segs[k].comms+=(openComm+e1comm+e2comm+partialComms);
   });
   // ── Unified trade history (closed + cancelled, chronological) ────────
   var allHistory=trades.filter(function(t){
@@ -1609,17 +1824,29 @@ function renderDashboard(){
       var rpCell=isCancelled
         ?'<span style="color:#ccc">—</span>'
         :'<span style="color:'+pc+';font-weight:600">'+(t.rpnl||'')+'</span>';
+      // Auto-calculate days: use daysOpen if provided, otherwise calculate from dates
+      var daysDisplay='—';
+      if(t.daysOpen){
+        daysDisplay=t.daysOpen+'d';
+      } else if(t.openDate&&t.closeDate){
+        var open=new Date(t.openDate+'T00:00:00');
+        var close=new Date(t.closeDate+'T00:00:00');
+        var diff=Math.round((close-open)/(1000*60*60*24));
+        daysDisplay=diff+'d';
+      }
       return '<tr style="'+rowStyle+'">'+
         '<td>'+numCell+'</td>'+
         '<td><strong style="'+(isCancelled?'color:#bbb':'')+'">'+(t.ticker||'')+'</strong></td>'+
         '<td>'+(isCancelled?'<span style="color:#bbb">':'')+formatDate(t.openDate)+(isCancelled?'</span>':'')+'</td>'+
         '<td>'+(isCancelled?'<span style="color:#bbb">':'')+t.setup+(isCancelled?'</span>':'')+'</td>'+
         '<td>'+dirBadge(t.dir)+'</td>'+
-        '<td style="font-size:11px;'+(isCancelled?'color:#ccc':'')+'">'+(t.short||'')+'</td>'+
+        '<td style="font-size:11px;'+(isCancelled?'color:#ccc':'')+'">'+(t.dir==='Iron Condor'?(t.short||'—'):(!t.short?'—':t.short))+'</td>'+
         '<td>'+(isCancelled?'<span style="color:#ccc">':'')+cl+(isCancelled?'</span>':'')+'</td>'+
         '<td>'+(isCancelled?'<span style="color:#ccc">':'')+formatDate(t.closeDate)+(isCancelled?'</span>':'')+'</td>'+
-        '<td>'+(isCancelled?'<span style="color:#ccc">':'')+(t.daysOpen?t.daysOpen+'d':'—')+(isCancelled?'</span>':'')+'</td>'+
+        '<td>'+(isCancelled?'<span style="color:#ccc">':'')+(daysDisplay)+(isCancelled?'</span>':'')+'</td>'+
+        '<td style="font-size:11px;'+(isCancelled?'color:#ccc':'')+'">'+( t.pnl||'—')+'</td>'+
         '<td>'+rpCell+'</td>'+
+        '<td id="comment-cell-'+t.id+'" style="font-size:11px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;padding:6px;" title="'+(t.comments||'Click to edit')+'" onclick="openHistoryCommentModal(this)">'+(t.comments||'—')+'</td>'+
         '<td>'+statusCell+'</td>'+
       '</tr>';
     }).join('');
@@ -1628,10 +1855,13 @@ function renderDashboard(){
   }
 
   eid('seg-tbody').innerHTML=ALL_SEGS.map(function(k){
-    var v=segs[k],tot=v.rpnls.reduce(function(a,b){ return a+b; },0);
-    var avg=v.trades?tot/v.trades:0;
+    var v=segs[k];
+    var grossTot=v.grossPnls.reduce(function(a,b){return a+b;},0);
+    var realTot=v.rpnls.reduce(function(a,b){return a+b;},0);
+    var avg=v.trades?grossTot/v.trades:0;
     var wr2=v.trades?((v.wins/v.trades)*100).toFixed(1):'—';
-    var tc=tot>0?'#2d6e0f':tot<0?'#A32D2D':'#888';
+    var gc=grossTot>0?'#2d6e0f':grossTot<0?'#A32D2D':'#888';
+    var rc=realTot>0?'#2d6e0f':realTot<0?'#A32D2D':'#888';
     var dimStyle=v.trades===0?'color:#bbb':'';
     return '<tr style="'+dimStyle+'">'+
       '<td style="font-weight:600'+(v.trades===0?';color:#bbb':'')+'">'+k+'</td>'+
@@ -1640,10 +1870,12 @@ function renderDashboard(){
         (v.trades===0?'—':wr2+'%')+'</td>'+
       '<td style="color:'+(v.trades===0?'#bbb':avg>=0?'#2d6e0f':'#A32D2D')+'">'+
         (v.trades===0?'—':fmt$(avg))+'</td>'+
-      '<td style="color:'+tc+';font-weight:600">'+
-        (v.trades===0?'—':fmt$(tot))+'</td>'+
+      '<td style="color:'+gc+';font-weight:600">'+
+        (v.trades===0?'—':fmt$(grossTot))+'</td>'+
       '<td style="color:'+(v.trades===0?'#bbb':'#A32D2D')+'">'+
-        (v.trades===0?'—':fmt$(-v.comms))+'</td></tr>';
+        (v.trades===0?'—':'<span style="color:#A32D2D">'+fmt$(v.comms)+'</span>')+'</td>'+
+      '<td style="color:'+rc+';font-weight:600">'+
+        (v.trades===0?'—':fmt$(realTot))+'</td></tr>';
   }).join('');
 }
 
@@ -1701,13 +1933,13 @@ function openFillModal(id){
   eid('fm-spread-section').style.display=ic?'none':'block';
   eid('fm-ic-section').style.display=ic?'block':'none';
   if(ic){
-    sv('fm-ic-filled',t.ordered||'1'); sv('fm-ic-comm','0');
+    sv('fm-ic-filled',t.ordered||'1'); sv('fm-ic-comm',t.openComm||'0');
     sv('fm-bc-credit',t.bcCredit||'0.50'); sv('fm-bp-credit',t.bpCredit||'0.50');
     sv('fm-bc-received',''); sv('fm-bp-received',''); sv('fm-ic-received','');
     sv('fm-bc-target',''); sv('fm-bp-target',''); sv('fm-ic-total-credit',''); sv('fm-ic-total-target','');
   } else {
     sv('fm-filled',t.ordered||'1'); sv('fm-credit',t.credit||t.debit||'');
-    sv('fm-comm','0'); sv('fm-received',''); sv('fm-target',t.target||'');
+    sv('fm-comm',t.openComm||'0'); sv('fm-received',''); sv('fm-target',t.target||'');
     eid('fm-credit-lbl').textContent=t.isDir?'Fill debit ($)':'Fill credit ($)';
   }
   eid('fill-modal').classList.add('open');
@@ -1744,22 +1976,42 @@ function calcFillReceived(){
 function confirmFill(){
   if(fillingId===null) return;
   var idx=trades.findIndex(function(x){ return x.id===fillingId; }); if(idx<0) return;
-  var credit=parseFloat(gv('fm-credit'))||0;
-  var filled=parseInt(gv('fm-filled'))||0;
-  var rcv=(credit*filled*100).toFixed(2);
   var t=trades[idx];
+  var ic=t.dir==='Iron Condor';
   var pct=(t.setup||'Typical')==='Typical'?0.30:0.50;
-  trades[idx].filled    = filled;
-  trades[idx].credit    = t.isDir?'':String(credit);
-  trades[idx].debit     = t.isDir?String(credit):'';
-  trades[idx].openComm  = gv('fm-comm');
-  trades[idx].received  = credit>0?(t.isDir?'-$'+rcv:'$'+rcv):'';
-  var manualTarget=gv('fm-target');
-  trades[idx].target    = manualTarget || (credit>0?'-'+(Math.floor(credit*pct/0.05)*0.05).toFixed(2):'');
-  // update risk
-  if(!t.isDir && !isNaN(parseFloat(t.short)) && !isNaN(parseFloat(t.long))){
-    var spread=Math.abs(parseFloat(t.short)-parseFloat(t.long));
-    trades[idx].risk = spread>0?'$'+((spread-credit)*100).toFixed(2):'';
+
+  if(ic){
+    // ── Iron Condor: read the IC fill fields, not the spread fields ──────────
+    var filled=parseInt(gv('fm-ic-filled'))||0;
+    var bcC=parseFloat(gv('fm-bc-credit'))||0;
+    var bpC=parseFloat(gv('fm-bp-credit'))||0;
+    var tot=parseFloat((bcC+bpC).toFixed(2));
+    var rcv=(tot*filled*100).toFixed(2);
+    trades[idx].filled   = filled;
+    trades[idx].bcCredit = String(bcC);
+    trades[idx].bpCredit = String(bpC);
+    trades[idx].credit   = String(tot);
+    trades[idx].debit    = '';
+    trades[idx].openComm = gv('fm-ic-comm');
+    trades[idx].received = tot>0?'$'+rcv:'';
+    trades[idx].target   = tot>0?'-'+(Math.floor(tot*pct/0.05)*0.05).toFixed(2):'';
+    // risk for IC was set at entry (ic-risk); leave it untouched
+  } else {
+    var credit=parseFloat(gv('fm-credit'))||0;
+    var filled=parseInt(gv('fm-filled'))||0;
+    var rcv=(credit*filled*100).toFixed(2);
+    trades[idx].filled    = filled;
+    trades[idx].credit    = t.isDir?'':String(credit);
+    trades[idx].debit     = t.isDir?String(credit):'';
+    trades[idx].openComm  = gv('fm-comm');
+    trades[idx].received  = credit>0?(t.isDir?'-$'+rcv:'$'+rcv):'';
+    var manualTarget=gv('fm-target');
+    trades[idx].target    = manualTarget || (credit>0?'-'+(Math.floor(credit*pct/0.05)*0.05).toFixed(2):'');
+    // update risk
+    if(!t.isDir && !isNaN(parseFloat(t.short)) && !isNaN(parseFloat(t.long))){
+      var spread=Math.abs(parseFloat(t.short)-parseFloat(t.long));
+      trades[idx].risk = spread>0?'$'+((spread-credit)*100).toFixed(2):'';
+    }
   }
   trades[idx].pending = false;
   upsertTrade(trades[idx]);
@@ -1771,6 +2023,21 @@ function confirmFill(){
 
 function openEditModal(id){
   var t=trades.find(function(x){ return x.id===id; }); if(!t) return;
+  // Display commissions in modal
+  var openC=parseFloat(t.openComm)||0;
+  var e1C=parseFloat(t.e1comm)||0;
+  var e2C=parseFloat(t.e2comm)||0;
+  var bcC=parseFloat(t.bcCloseComm)||0;
+  var bpC=parseFloat(t.bpCloseComm)||0;
+  var totalC=openC+e1C+e2C+bcC+bpC;
+  
+  eid('em-comm-open').textContent=(openC>0?'$'+openC.toFixed(2):'—');
+  eid('em-comm-e1').textContent=(e1C>0?'$'+e1C.toFixed(2):'—');
+  eid('em-comm-e2').textContent=(e2C>0?'$'+e2C.toFixed(2):'—');
+  eid('em-comm-bc').textContent=(bcC>0?'$'+bcC.toFixed(2):'—');
+  eid('em-comm-bp').textContent=(bpC>0?'$'+bpC.toFixed(2):'—');
+  eid('em-comm-total').textContent='$'+totalC.toFixed(2);
+  
   eid('edit-modal-ticker').textContent=t.ticker+' — '+t.dir;
   sv('em-ticker', t.ticker||'');
   sv('em-open-date', t.openDate||'');
@@ -1799,9 +2066,10 @@ function renderEditPartials(id){
   var t=trades.find(function(x){return x.id===id;}); if(!t||!t.partials) return;
   var list=document.getElementById('em-partials-list'); if(!list) return;
   list.innerHTML=t.partials.map(function(p,i){
+    var net=(p.gross!=null)?(parseFloat(p.gross)-(parseFloat(p.comm)||0)):parseFloat(p.pnl||0);
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0ede6">'+
       '<span style="flex:1;color:#555;font-size:12px">'+formatDate(p.date)+' — '+p.qty+' contracts @ $'+p.price+
-      (p.side&&p.side!=='full'?' ('+p.side.toUpperCase()+')':'')+' — P&L: $'+p.pnl+'</span>'+
+      (p.side&&p.side!=='full'?' ('+p.side.toUpperCase()+')':'')+' — P&L: $'+net.toFixed(2)+'</span>'+
       '<button onclick="deleteEditPartial('+id+','+i+')" style="padding:2px 8px;font-size:11px;color:#A32D2D;border:1px solid #F0C0C0;border-radius:4px;background:#fff;cursor:pointer;flex-shrink:0">Remove</button>'+
     '</div>';
   }).join('')||'<span style="color:#999;font-size:12px">No partials recorded.</span>';
@@ -1811,21 +2079,39 @@ function deleteEditPartial(id,index){
   if(!confirm('Remove this partial close entry?')) return;
   var idx=trades.findIndex(function(x){return x.id===id;}); if(idx<0) return;
   trades[idx].partials.splice(index,1);
-  // Reset IC leg flags if all leg partials were removed
-  var remaining=trades[idx].partials;
-  var bcLeft=remaining.filter(function(p){return p.side==='bc';});
-  var bpLeft=remaining.filter(function(p){return p.side==='bp';});
-  if(trades[idx].bcClosed&&bcLeft.length===0){
-    trades[idx].bcClosed=false; trades[idx].bcClosePnl='';
-    trades[idx].bcCloseDate=''; trades[idx].bcClosePrice='';
-  }
-  if(trades[idx].bpClosed&&bpLeft.length===0){
-    trades[idx].bpClosed=false; trades[idx].bpClosePnl='';
-    trades[idx].bpCloseDate=''; trades[idx].bpClosePrice='';
-  }
+  recomputeLegState(idx);   // re-derive flags, per-leg fields, and open/closed status
   upsertTrade(trades[idx]);
   renderEditPartials(id);
-  renderOpen();
+  renderOpen(); renderClosed();
+}
+
+// Re-derive IC leg flags / per-leg close fields and the trade's open-vs-closed
+// status purely from the current partials. Used after editing/removing an exit.
+function recomputeLegState(idx){
+  var t=trades[idx];
+  if(t.dir==='Iron Condor'){
+    ['bc','bp'].forEach(function(side){
+      var ls=legState(t,side);
+      var key=(side==='bc')?'bcClosed':'bpClosed';
+      if(ls.closed && ls.closedQty>0){
+        trades[idx][key]=true;
+        if(side==='bc'){ trades[idx].bcClosePnl='$'+ls.gross.toFixed(2); trades[idx].bcCloseComm=String(ls.comm); }
+        else           { trades[idx].bpClosePnl='$'+ls.gross.toFixed(2); trades[idx].bpCloseComm=String(ls.comm); }
+      } else {
+        trades[idx][key]=false;
+        if(side==='bc'){ trades[idx].bcClosePnl=''; trades[idx].bcCloseComm=''; trades[idx].bcClosePrice=''; trades[idx].bcCloseDate=''; }
+        else           { trades[idx].bpClosePnl=''; trades[idx].bpCloseComm=''; trades[idx].bpClosePrice=''; trades[idx].bpCloseDate=''; }
+      }
+    });
+  }
+  var allClosed=legsOf(t).every(function(l){return l.filled>0 && l.closed;});
+  if(allClosed){
+    finalizeTrade(idx, t.closeDate||new Date().toISOString().split('T')[0], t.exitReason||'Closed');
+  } else {
+    // Reopen — clear any finalized outcome
+    trades[idx].closeDate=''; trades[idx].daysOpen=''; trades[idx].exitReason='';
+    trades[idx].pnl=''; trades[idx].rpnl=''; trades[idx].wl='';
+  }
 }
 
 function confirmEdit(){
@@ -1858,28 +2144,56 @@ function confirmEdit(){
   renderPending(); renderOpen();
 }
 
+// ── Position detail (tap Partial Closed / Remaining) ───────────────────────
+function openPositionDetail(id){
+  var t=trades.find(function(x){return x.id===id;}); if(!t) return;
+  var ic=t.dir==='Iron Condor';
+  var legs=legsOf(t);
+  var legName={bc:'Bear Call (Call side)', bp:'Bull Put (Put side)', single:t.dir};
+  document.getElementById('pd-title').textContent=t.ticker+' — '+t.dir+' · opened '+formatDate(t.openDate);
+  var html='';
+  legs.forEach(function(l){
+    html+='<div style="background:#f7f6f3;border-radius:8px;padding:10px 12px;margin-bottom:8px">'+
+      '<div style="font-weight:600;margin-bottom:5px">'+legName[l.side]+'</div>'+
+      '<div style="display:flex;gap:18px;color:#555">'+
+        '<span>Filled: <b>'+l.filled+'</b></span>'+
+        '<span>Closed: <b>'+l.closedQty+'</b></span>'+
+        '<span style="color:#0a5e3a">Still open: <b>'+l.remaining+'</b></span>'+
+      '</div></div>';
+  });
+  var parts=(t.partials||[]);
+  if(parts.length){
+    html+='<div style="font-weight:600;margin:12px 0 6px">Exits recorded</div>';
+    parts.forEach(function(p){
+      var net=(p.gross!=null)?(parseFloat(p.gross)-(parseFloat(p.comm)||0)):parseFloat(p.pnl||0);
+      var legLbl=ic?(p.side==='bc'?'Call ':p.side==='bp'?'Put ':''):'';
+      html+='<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0;color:#555">'+
+        '<span>'+formatDate(p.date)+' · '+legLbl+p.qty+' @ $'+p.price+(parseFloat(p.comm)>0?' · comm $'+(parseFloat(p.comm)||0).toFixed(2):'')+'</span>'+
+        '<span style="color:'+(net>=0?'#2d6e0f':'#A32D2D')+';font-weight:600;white-space:nowrap">$'+net.toFixed(2)+'</span>'+
+      '</div>';
+    });
+    html+='<div style="font-size:11px;color:#999;margin-top:6px">P&L shown is after each exit\u2019s commission. Opening commission is applied once at full close.</div>';
+  } else {
+    html+='<div style="color:#999;margin-top:8px">No exits recorded yet \u2014 nothing closed.</div>';
+  }
+  document.getElementById('pd-body').innerHTML=html;
+  document.getElementById('posdetail-modal').classList.add('open');
+}
+
 // ── Partial Close ────────────────────────────────────────────────────────
 var partialId=null, partialSide=null;
 
 function openPartialModal(id,side){
   var t=trades.find(function(x){return x.id===id;}); if(!t) return;
-  partialId=id; partialSide=side||'full';
-  var label=t.dir==='Iron Condor'?(side==='bc'?'Bear Call':side==='bp'?'Bull Put':'Full IC'):t.dir;
+  var ic=t.dir==='Iron Condor';
+  var legSide=ic?(side==='bc'||side==='bp'?side:'bc'):'single';
+  partialId=id; partialSide=legSide;
+  var label=ic?(legSide==='bc'?'Bear Call':'Bull Put'):t.dir;
   eid('partial-modal-ticker').textContent=t.ticker+' — '+label;
   sv('pm-price',''); sv('pm-qty','0'); sv('pm-comm','0'); sv('pm-notes','');
   sv('pm-date',new Date().toISOString().split('T')[0]);
   sv('pm-pnl','');
-  var filled=parseInt(t.filled)||0;
-  var partials=t.partials||[];
-  var ic=t.dir==='Iron Condor', side=partialSide||'full';
-  var legKey=(ic&&side!=='full')?side:null;
-  var legPartials=legKey?partials.filter(function(p){return p.side===legKey;}):partials.filter(function(p){return !p.side||p.side==='full';});
-  var closedQty=legPartials.reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
-  // For IC single leg, also account for leg being fully closed via confirmClose
-  if(legKey==='bc'&&t.bcClosed) closedQty=filled;
-  if(legKey==='bp'&&t.bpClosed) closedQty=filled;
-  var openQty=Math.max(0,filled-closedQty);
-  sv('pm-remaining',openQty);
+  sv('pm-remaining', legRemaining(t, legSide));
   eid('partial-modal').classList.add('open');
   calcPartialPnl();
 }
@@ -1887,31 +2201,15 @@ function openPartialModal(id,side){
 function calcPartialPnl(){
   var t=trades.find(function(x){return x.id===partialId;}); if(!t) return;
   var price=parseFloat(gv('pm-price'))||0, qty=parseInt(gv('pm-qty'))||0, comm=parseFloat(gv('pm-comm'))||0;
-  var filled=parseInt(t.filled)||0;
-  var side=partialSide||'full';
   var ic=t.dir==='Iron Condor';
-  var legKey=(ic&&side!=='full')?side:null;
-  // Only count partials for this specific leg
-  var legPartials=(t.partials||[]).filter(function(p){
-    return legKey ? p.side===legKey : (!p.side||p.side==='full');
-  });
-  var closedQty=legPartials.reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
-  var openQty=filled-closedQty;
+  var side=ic?(partialSide==='bc'||partialSide==='bp'?partialSide:'bc'):'single';
+  var openQty=legRemaining(t, side);
   sv('pm-remaining',Math.max(0,openQty-qty));
-  // Get entry credit/debit for this specific side
-  var entryCredit;
-  if(t.dir==='Iron Condor'){
-    if(side==='bc') entryCredit=parseFloat(t.bcCredit||'0')||0;
-    else if(side==='bp') entryCredit=parseFloat(t.bpCredit||'0')||0;
-    else entryCredit=parseFloat(t.credit||'0')||0; // full IC = combined credit
-  } else {
-    entryCredit=parseFloat(t.credit||t.debit||'0')||0;
-  }
-  // Show entry credit reference
+  var entryCredit=legCreditOf(t, side);
   var entryRef=document.getElementById('pm-entry-credit');
   if(entryRef) entryRef.value='$'+entryCredit.toFixed(2);
-  if(price>0&&qty>0){
-    // P&L = (entry - exit) * qty * 100 for credit trades; (exit - entry) for debit
+  if(qty>0){
+    // Net cash impact of THIS exit (gross − this exit's commission)
     var pnl=t.isDir?((price-entryCredit)*qty*100-comm):((entryCredit-price)*qty*100-comm);
     sv('pm-pnl','$'+pnl.toFixed(2));
   } else sv('pm-pnl','');
@@ -1919,99 +2217,16 @@ function calcPartialPnl(){
 
 function confirmPartial(){
   if(!partialId) return;
-  var idx=trades.findIndex(function(x){return x.id===partialId;}); if(idx<0) return;
-  var t=trades[idx];
+  var t=trades.find(function(x){return x.id===partialId;}); if(!t) return;
   var ic=t.dir==='Iron Condor';
-  var side=partialSide||'full';
-  var price=parseFloat(gv('pm-price'))||0, qty=parseInt(gv('pm-qty'))||0, comm=parseFloat(gv('pm-comm'))||0;
-  if(!price||!qty){alert('Please enter exit price and quantity.'); return;}
-
-  // For IC single-leg partials, track per-leg partials separately
-  var legKey = (ic && side!=='full') ? side : null;
-
-  // Get partials for this specific leg (or all partials for non-IC)
-  var partials=trades[idx].partials||[];
-  var legPartials = legKey ? partials.filter(function(p){return p.side===legKey;}) : partials.filter(function(p){return !p.side||p.side==='full';});
-  var closedQty=legPartials.reduce(function(a,p){return a+(parseInt(p.qty)||0);},0);
-
-  if(qty>t.filled-closedQty){alert('Quantity exceeds remaining open contracts.'); return;}
-
-  // Get the right credit for this leg
-  var rcv = ic
-    ? (side==='bc'?parseFloat(t.bcCredit||'0'):side==='bp'?parseFloat(t.bpCredit||'0'):parseFloat(t.credit||'0'))
-    : parseFloat(t.credit||t.debit||'0')||0;
-  var pnl=t.isDir?((price-rcv)*qty*100-comm):((rcv-price)*qty*100-comm);
-  var partial={date:gv('pm-date'),price:price,qty:qty,comm:comm,pnl:pnl.toFixed(2),notes:gv('pm-notes'),side:legKey||'full'};
-  if(!trades[idx].partials) trades[idx].partials=[];
-  trades[idx].partials.push(partial);
-
-  var newLegClosed=closedQty+qty;
-  var legFullyClosed=(newLegClosed>=parseInt(t.filled)||0);
-
-  if(ic && legKey && legFullyClosed){
-    // This IC leg is fully closed — mark it but keep trade OPEN unless other leg also closed
-    var legPnl=legPartials.concat([partial]).reduce(function(a,p){return a+parseFloat(p.pnl);},0);
-    if(legKey==='bc'){
-      trades[idx].bcClosed=true;
-      trades[idx].bcClosePnl='$'+legPnl.toFixed(2);
-      trades[idx].bcCloseDate=partial.date;
-      trades[idx].bcClosePrice=String(price);
-      trades[idx].bcCloseComm=String(comm);
-    } else {
-      trades[idx].bpClosed=true;
-      trades[idx].bpClosePnl='$'+legPnl.toFixed(2);
-      trades[idx].bpCloseDate=partial.date;
-      trades[idx].bpClosePrice=String(price);
-      trades[idx].bpCloseComm=String(comm);
-    }
-    // Check if BOTH legs now closed
-    if(trades[idx].bcClosed && trades[idx].bpClosed){
-      var bcP=parseFloat((trades[idx].bcClosePnl||'0').replace(/[^0-9.-]/g,''))||0;
-      var bpP=parseFloat((trades[idx].bpClosePnl||'0').replace(/[^0-9.-]/g,''))||0;
-      var totalPnl=bcP+bpP;
-      var oc=parseFloat(t.openComm||'0')||0;
-      trades[idx].closeDate=partial.date;
-      trades[idx].exitReason='Partial Close';
-      trades[idx].pnl='$'+totalPnl.toFixed(2);
-      trades[idx].rpnl='$'+(totalPnl-oc).toFixed(2);
-      trades[idx].wl=totalPnl>0?'Win':totalPnl<0?'Loss':'';
-      trades[idx].comments=(trades[idx].comments?trades[idx].comments+' | ':'')
-        +'BC: '+trades[idx].bcClosePnl+' | BP: '+trades[idx].bpClosePnl;
-      upsertTrade(trades[idx]);
-      eid('partial-modal').classList.remove('open');
-      partialId=null; partialSide=null;
-      renderOpen(); renderClosed(); showTab('closed');
-      return;
-    }
-    // Only one leg closed — stay open
-    upsertTrade(trades[idx]);
-    eid('partial-modal').classList.remove('open');
-    partialId=null; partialSide=null;
-    renderOpen();
-    return;
-  }
-
-  // Non-IC or IC full position partial
-  if(!ic && legFullyClosed){
-    var totalPnl=trades[idx].partials.reduce(function(a,p){return a+parseFloat(p.pnl);},0);
-    trades[idx].closeDate=partial.date;
-    trades[idx].exitReason='Partial Close';
-    trades[idx].pnl='$'+totalPnl.toFixed(2);
-    trades[idx].rpnl='$'+totalPnl.toFixed(2);
-    trades[idx].wl=totalPnl>0?'Win':totalPnl<0?'Loss':'';
-    trades[idx].comments=(trades[idx].comments?trades[idx].comments+' | ':'')+'Partials: '+trades[idx].partials.map(function(p){return p.qty+'@'+p.price+'¢';}).join(', ');
-    upsertTrade(trades[idx]);
-    eid('partial-modal').classList.remove('open');
-    partialId=null; partialSide=null;
-    renderOpen(); renderClosed(); showTab('closed');
-    return;
-  }
-
-  // Still partially open
-  upsertTrade(trades[idx]);
+  var side=ic?(partialSide==='bc'||partialSide==='bp'?partialSide:'bc'):'single';
+  var r=recordExit({tradeId:partialId, side:side, qty:gv('pm-qty'), price:gv('pm-price'),
+                    comm:gv('pm-comm'), date:gv('pm-date'), notes:gv('pm-notes'), reason:'Partial Close'});
+  if(!r.ok){ alert(r.error); return; }
   eid('partial-modal').classList.remove('open');
   partialId=null; partialSide=null;
-  renderOpen();
+  renderOpen(); renderClosed();
+  if(r.finalized) showTab('closed');
 }
 
 // ── Auto-fill Exit 2 qty from remaining ──────────────────────────────────
@@ -2086,6 +2301,27 @@ function reopenTrade(id){
 
 // ── Edit closed trade modal ───────────────────────────────────────────────
 var editClosedId=null;
+var historyCommentId=null;
+
+function openHistoryCommentModal(cell){
+  // Extract trade ID from the cell's ID attribute (string); compare loosely against numeric ids
+  var id=cell.id.replace('comment-cell-','');
+  var t=trades.find(function(x){ return String(x.id)===id; }); if(!t) return;
+  historyCommentId=id;
+  document.getElementById('hcm-ticker').textContent=t.ticker+' — '+t.dir;
+  document.getElementById('hcm-comments').value=t.comments||'';
+  document.getElementById('history-comment-modal').classList.add('open');
+}
+
+function confirmHistoryComment(){
+  if(!historyCommentId) return;
+  var idx=trades.findIndex(function(x){ return String(x.id)===historyCommentId; }); if(idx<0) return;
+  trades[idx].comments=document.getElementById('hcm-comments').value;
+  upsertTrade(trades[idx]);
+  document.getElementById('history-comment-modal').classList.remove('open');
+  historyCommentId=null;
+  renderDashboard(); // Re-render to update the trade history
+}
 
 function openEditClosedModal(id){
   var t=trades.find(function(x){ return x.id===id; }); if(!t) return;
@@ -2095,8 +2331,25 @@ function openEditClosedModal(id){
   sv('ecm-e2p', t.e2price||''); sv('ecm-e2q', t.e2qty||''); sv('ecm-e2c', t.e2comm||'0');
   sv('ecm-cd', t.closeDate||''); sv('ecm-do', t.daysOpen||'');
   sv('ecm-er', t.exitReason||'Closed');
-  sv('ecm-pnl', t.pnl||''); sv('ecm-rpnl', t.rpnl||''); sv('ecm-wl', t.wl||'');
+  sv('ecm-pnl', t.pnl||''); sv('ecm-rpnl', t.rpnl||''); sv('ecm-delta', t.delta||''); sv('ecm-short', t.short||''); sv('ecm-wl', t.wl||'');
   sv('ecm-comments', t.comments||'');
+  
+  // Populate commission fields
+  sv('ecm-open-comm', t.openComm||'0');
+  sv('ecm-e1-comm-view', t.e1comm||'0');
+  sv('ecm-e2-comm-view', t.e2comm||'0');
+  sv('ecm-bc-comm', t.bcCloseComm||'0');
+  sv('ecm-bp-comm', t.bpCloseComm||'0');
+  
+  // Calculate and display total
+  var oc=parseFloat(t.openComm)||0;
+  var e1=parseFloat(t.e1comm)||0;
+  var e2=parseFloat(t.e2comm)||0;
+  var bc=parseFloat(t.bcCloseComm)||0;
+  var bp=parseFloat(t.bpCloseComm)||0;
+  var total=oc+e1+e2+bc+bp;
+  sv('ecm-comm-total', '$'+total.toFixed(2));
+  
   document.getElementById('edit-closed-modal').classList.add('open');
 }
 
@@ -2107,8 +2360,14 @@ function confirmEditClosed(){
   trades[idx].e2price=gv('ecm-e2p'); trades[idx].e2qty=gv('ecm-e2q'); trades[idx].e2comm=gv('ecm-e2c');
   trades[idx].closeDate=gv('ecm-cd'); trades[idx].daysOpen=gv('ecm-do');
   trades[idx].exitReason=gv('ecm-er');
-  trades[idx].pnl=gv('ecm-pnl'); trades[idx].rpnl=gv('ecm-rpnl'); trades[idx].wl=gv('ecm-wl');
+  trades[idx].pnl=gv('ecm-pnl'); trades[idx].rpnl=gv('ecm-rpnl'); trades[idx].delta=gv('ecm-delta'); trades[idx].short=gv('ecm-short'); trades[idx].wl=gv('ecm-wl');
   trades[idx].comments=gv('ecm-comments');
+  
+  // Also save Iron Condor commission fields if they have values
+  trades[idx].openComm=gv('ecm-open-comm')||'0';
+  trades[idx].bcCloseComm=gv('ecm-bc-comm')||'0';
+  trades[idx].bpCloseComm=gv('ecm-bp-comm')||'0';
+  
   upsertTrade(trades[idx]);
   document.getElementById('edit-closed-modal').classList.remove('open');
   editClosedId=null; renderClosed(); renderDashboard();
